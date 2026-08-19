@@ -1,0 +1,6 @@
+node_modules/
+data/*.db
+data/*.db-*
+data/codes-a-imprimer.csv
+data/emails/
+.env

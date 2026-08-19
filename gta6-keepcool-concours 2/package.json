@@ -1,0 +1,21 @@
+{
+  "name": "gta6-keepcool-concours",
+  "version": "1.0.0",
+  "description": "Site du jeu-concours GTA 6 x Keep Cool : inscriptions, base de donnees et tirage au sort verifiable.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "gen-codes": "node scripts/generate-codes.js",
+    "draw": "node scripts/run-draw.js"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "@mollie/api-client": "^4.6.0",
+    "better-sqlite3": "^11.8.1",
+    "express": "^4.21.2",
+    "nodemailer": "^9.0.5"
+  }
+}

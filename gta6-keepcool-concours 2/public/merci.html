@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Merci ! — Commande GTA VI × Keep Cool Narbonne</title>
+<link rel="icon" type="image/png" href="assets/favicon.png" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  .code-chip { display:inline-block; font-family:monospace; font-weight:bold; font-size:1.05rem; color:var(--cyan); background:#0a0410; border:1px solid var(--pink); border-radius:9px; padding:9px 15px; margin:5px 6px 5px 0; letter-spacing:1px; }
+  .big-num { font-family:'Anton'; font-size:2rem; color:var(--pink); letter-spacing:1px; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><img src="assets/logo-mark.png" alt="" class="brand-logo" /> KEEP<span>COOL</span> × GTA VI</div>
+    <nav class="nav-links"><a href="index.html">Accueil</a><a href="boutique.html">Boutique</a></nav>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="form-card" style="max-width:620px;text-align:center">
+
+      <div id="pending">
+        <div style="font-size:2.6rem">⏳</div>
+        <h2>Vérification du paiement…</h2>
+        <p class="hint">Merci de patienter quelques secondes, nous confirmons ta commande.</p>
+      </div>
+
+      <div id="success" class="hidden">
+        <div style="font-size:3rem">🎉</div>
+        <h2 class="neon">Merci <span id="s-prenom"></span> !</h2>
+        <p>Ta commande est confirmée et payée. Un e-mail de confirmation vient de t'être envoyé.</p>
+        <p class="hint">Numéro de commande</p>
+        <div class="big-num" id="s-numero"></div>
+
+        <div class="card" style="margin-top:20px;text-align:left">
+          <h3>🎮 Ta participation au jeu</h3>
+          <p class="hint">Tu es inscrit(e) au tirage pour gagner un pack <b>PS5 + GTA VI</b>. Ton/tes code(s) :</p>
+          <div id="s-codes"></div>
+          <p class="hint" style="margin-top:10px">Tirage au sort le <b id="s-tirage"></b> — transparent et vérifiable sur <a href="verificateur.html">le vérificateur</a>.</p>
+        </div>
+
+        <a href="index.html" class="btn btn-primary" style="margin-top:20px">Retour à l'accueil</a>
+      </div>
+
+      <div id="failed" class="hidden">
+        <div style="font-size:2.6rem">❌</div>
+        <h2>Paiement non abouti</h2>
+        <p class="hint">Ton paiement n'a pas été validé. Aucune somme n'a été débitée.</p>
+        <a href="boutique.html" class="btn btn-primary" style="margin-top:14px">Réessayer</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+const params = new URLSearchParams(location.search);
+const numero = params.get('cmd');
+let tries = 0;
+
+async function loadTirageDate() {
+  try { const c = await (await fetch('/api/config')).json(); document.getElementById('s-tirage').textContent = c.dateTirage; } catch (e) {}
+}
+
+async function poll() {
+  if (!numero) { show('failed'); return; }
+  try {
+    const d = await (await fetch('/api/commande/' + encodeURIComponent(numero))).json();
+    if (!d.ok) { show('failed'); return; }
+    if (d.statut === 'payee') {
+      document.getElementById('s-prenom').textContent = d.prenom || '';
+      document.getElementById('s-numero').textContent = d.numero;
+      document.getElementById('s-codes').innerHTML = (d.codes || []).map((c) => `<span class="code-chip">${c}</span>`).join('') || '<span class="hint">Codes en cours d\'attribution…</span>';
+      show('success');
+      return;
+    }
+    if (d.statut === 'echouee' || d.statut === 'annulee') { show('failed'); return; }
+  } catch (e) {}
+  if (++tries < 15) setTimeout(poll, 2000);
+  else document.querySelector('#pending .hint').textContent = "Le paiement met plus de temps que prévu. Tu recevras l'e-mail de confirmation dès validation.";
+}
+
+function show(id) {
+  ['pending', 'success', 'failed'].forEach((x) => document.getElementById(x).classList.toggle('hidden', x !== id));
+}
+
+loadTirageDate();
+poll();
+</script>
+</body>
+</html>

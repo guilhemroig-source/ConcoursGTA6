@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tirage au sort — GTA VI x Keep Cool</title>
+<link rel="icon" type="image/png" href="assets/favicon.png" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  .draw-stage { min-height: 120px; display:flex; align-items:center; justify-content:center; font-family:'Anton'; font-size:2.4rem; letter-spacing:2px; }
+  .winner-row { display:flex; align-items:center; gap:14px; padding:14px 18px; border-radius:14px; border:1px solid var(--card-border); background:var(--card); margin-bottom:10px; animation: pop .4s ease; }
+  @keyframes pop { from { transform: scale(.9); opacity:0 } to { transform: scale(1); opacity:1 } }
+  .winner-row .rank { font-family:'Anton'; font-size:1.6rem; width:46px; height:46px; border-radius:50%; display:flex;align-items:center;justify-content:center; background:linear-gradient(135deg,var(--pink),var(--violet)); flex:none; }
+  .winner-row .who { font-weight:800; font-size:1.1rem; }
+  .winner-row .meta { color:var(--muted); font-size:.85rem; font-family:monospace; }
+  .lot-badge { margin-left:auto; font-weight:800; padding:6px 14px; border-radius:999px; font-size:.85rem; }
+  .lot-ps5 { background:rgba(255,46,136,.2); color:var(--pink); }
+  .lot-gta { background:rgba(34,224,224,.18); color:var(--cyan); }
+  .lot-sup { background:rgba(255,210,63,.18); color:var(--yellow); }
+  .seed-box { font-family:monospace; background:rgba(0,0,0,.3); padding:10px 14px; border-radius:10px; border:1px solid var(--card-border); word-break:break-all; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><img src="assets/logo-mark.png" alt="" class="brand-logo" /> TIRAGE · KEEP<span>COOL</span> × GTA VI</div>
+    <nav class="nav-links">
+      <a href="admin.html">← Admin</a>
+      <a href="verificateur.html">Vérificateur public</a>
+    </nav>
+  </div>
+</header>
+
+<!-- LOGIN -->
+<section id="login-view">
+  <div class="wrap">
+    <div class="form-card" style="max-width:420px">
+      <h2 class="center">Accès tirage</h2>
+      <div id="login-alert" class="alert"></div>
+      <div class="field"><label for="pw">Mot de passe admin</label><input type="text" id="pw" /></div>
+      <button class="btn btn-primary btn-block" id="login-btn">Se connecter</button>
+    </div>
+  </div>
+</section>
+
+<section id="stage-view" class="hidden">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Tirage au sort officiel · transparent & vérifiable</span>
+      <h2 class="neon">Le grand tirage</h2>
+      <p>Le tirage utilise une <b>graine publique</b> et un algorithme reproductible (SHA-256). N'importe qui peut recalculer le résultat avec le <a href="verificateur.html">vérificateur public</a>.</p>
+    </div>
+
+    <div class="form-card" style="max-width:680px">
+      <div id="alert" class="alert"></div>
+      <div class="field">
+        <label for="seed">Graine publique du tirage *</label>
+        <input type="text" id="seed" placeholder="ex : KEEPCOOL-GTA6-2026 + n° Loto du 20/09/2026" />
+        <div class="hint">Annoncez cette graine à l'avance (affichage salle, réseaux). Idéalement basée sur un aléa public futur impossible à prédire (numéros du Loto d'une date, cours de clôture, etc.). Elle garantit que le tirage n'est pas truqué.</div>
+      </div>
+      <button class="btn btn-primary btn-block" id="draw-btn">🎲 Lancer le tirage</button>
+      <p class="hint" id="count-note"></p>
+    </div>
+
+    <div id="results" class="hidden mt">
+      <div class="draw-stage" id="stage"></div>
+
+      <div id="gagnants-block" style="margin-top:20px">
+        <h2>🏆 Les grands gagnants — PlayStation 5 + jeu GTA VI</h2>
+        <div id="gagnants-list"></div>
+      </div>
+      <div id="sup-block" style="margin-top:26px">
+        <h2>🔁 Suppléants</h2>
+        <div id="sup-list"></div>
+      </div>
+
+      <div class="card mt">
+        <h3>Preuve de transparence</h3>
+        <p class="hint">Graine utilisée :</p>
+        <div class="seed-box" id="proof-seed"></div>
+        <p class="hint mt">Algorithme : classement par <code>SHA-256(graine | code_participant)</code> croissant. Nombre de participants : <b id="proof-n"></b>.</p>
+        <button class="btn btn-ghost" id="dl-json">⬇️ Télécharger le procès-verbal (JSON)</button>
+        <a class="btn btn-ghost" href="verificateur.html">🔎 Ouvrir le vérificateur</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="tirage.js"></script>
+</body>
+</html>

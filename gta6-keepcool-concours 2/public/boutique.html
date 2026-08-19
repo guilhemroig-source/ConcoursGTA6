@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Boutique — T-shirt collector GTA VI × Keep Cool Narbonne</title>
+<link rel="icon" type="image/png" href="assets/favicon.png" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  .shop-grid { display:grid; grid-template-columns: 0.9fr 1.1fr; gap:34px; align-items:start; }
+  .shop-visual { position:sticky; top:84px; border-radius:22px; border:1px solid var(--card-border);
+    background: radial-gradient(70% 60% at 50% 40%, rgba(255,46,136,.28), transparent 70%), #0a0410; padding:18px; text-align:center; }
+  .shop-visual img { width:100%; max-width:420px; }
+  .price-tag { font-family:'Anton'; font-size:2.2rem; color:var(--cyan); }
+  .size-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 14px; border:1px solid var(--card-border); border-radius:12px; margin-bottom:8px; background:rgba(0,0,0,.2); }
+  .size-row .sz { font-family:'Anton'; font-size:1.2rem; width:52px; }
+  .stepper { display:flex; align-items:center; gap:10px; }
+  .stepper button { width:34px; height:34px; border-radius:9px; border:1px solid var(--card-border); background:var(--card); color:#fff; font-size:1.2rem; cursor:pointer; }
+  .stepper input { width:46px; text-align:center; padding:7px; border-radius:8px; border:1px solid var(--card-border); background:rgba(0,0,0,.3); color:#fff; font-weight:700; }
+  .radio-card { display:flex; gap:10px; align-items:flex-start; padding:14px; border:1px solid var(--card-border); border-radius:12px; margin-bottom:10px; cursor:pointer; }
+  .radio-card input { margin-top:3px; accent-color:var(--pink); }
+  .radio-card.sel { border-color:var(--pink); background:rgba(255,46,136,.08); }
+  .summary { position:sticky; bottom:0; }
+  .summary-line { display:flex; justify-content:space-between; padding:6px 0; color:var(--muted); }
+  .summary-total { display:flex; justify-content:space-between; padding:12px 0 0; font-family:'Anton'; font-size:1.5rem; }
+  .summary-total b { color:var(--yellow); }
+  .secure { font-size:.82rem; color:var(--muted); margin-top:10px; text-align:center; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><img src="assets/logo-mark.png" alt="" class="brand-logo" /> BOUTIQUE · KEEP<span>COOL</span> × GTA VI</div>
+    <nav class="nav-links">
+      <a href="index.html">Accueil</a>
+      <a href="reglement.html">Règlement</a>
+    </nav>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="section-head" style="text-align:left">
+      <span class="eyebrow">Édition collector limitée</span>
+      <h2>Le t-shirt <span class="neon">Social Sports Club</span></h2>
+      <p style="margin:0">Chaque t-shirt acheté = un code de participation = une chance de gagner un pack <b>PlayStation 5 + GTA VI</b>. Livraison à domicile ou retrait à la salle.</p>
+    </div>
+
+    <div class="shop-grid">
+      <!-- Visuel -->
+      <div class="shop-visual">
+        <img src="assets/logo-tshirt.png" alt="T-shirt collector Social Sports Club — Narbonne City" />
+        <div style="margin-top:12px" class="price-tag" id="price-tag">25,00 €</div>
+        <div class="hint">Prix unitaire · coton premium · sérigraphie néon</div>
+      </div>
+
+      <!-- Formulaire -->
+      <div>
+        <div id="alert" class="alert"></div>
+
+        <div class="card" style="margin-bottom:18px">
+          <h3>1. Choisis tes tailles</h3>
+          <div id="sizes"></div>
+          <p class="hint">Ajoute autant de tailles que tu veux (max 20 t-shirts / commande).</p>
+        </div>
+
+        <div class="card" style="margin-bottom:18px">
+          <h3>2. Livraison</h3>
+          <label class="radio-card sel" id="rc-domicile">
+            <input type="radio" name="livr" value="domicile" checked />
+            <div><b>Livraison à domicile</b> — <span id="frais-label">+3,50 €</span><br><span class="hint">Reçois ton t-shirt chez toi.</span></div>
+          </label>
+          <label class="radio-card" id="rc-retrait">
+            <input type="radio" name="livr" value="retrait" />
+            <div><b>Retrait à la salle</b> — gratuit<br><span class="hint">Keep Cool Narbonne, 44 rue Demoge.</span></div>
+          </label>
+
+          <div id="addr-block">
+            <div class="field"><label>Adresse *</label><input type="text" id="adresse" placeholder="N° et rue" /></div>
+            <div class="row2">
+              <div class="field"><label>Code postal *</label><input type="text" id="cp" placeholder="11100" /></div>
+              <div class="field"><label>Ville *</label><input type="text" id="ville" placeholder="Narbonne" /></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:18px">
+          <h3>3. Tes coordonnées</h3>
+          <div class="row2">
+            <div class="field"><label>Prénom *</label><input type="text" id="prenom" /></div>
+            <div class="field"><label>Nom *</label><input type="text" id="nom" /></div>
+          </div>
+          <div class="field"><label>Email *</label><input type="email" id="email" placeholder="toi@email.com" /><div class="hint">Ta confirmation de commande et ton code de participation y seront envoyés.</div></div>
+          <div class="field"><label>Téléphone</label><input type="tel" id="telephone" /></div>
+        </div>
+
+        <div class="card">
+          <h3>Récapitulatif</h3>
+          <div class="summary-line"><span id="rl-articles">Articles</span><span id="v-articles">0,00 €</span></div>
+          <div class="summary-line"><span>Frais d'envoi</span><span id="v-frais">3,50 €</span></div>
+          <div class="summary-total"><span>Total</span><b id="v-total">0,00 €</b></div>
+          <label class="check" style="margin-top:14px"><input type="checkbox" id="cgv" /> <span>J'accepte le <a href="reglement.html" target="_blank">règlement du jeu</a> et je certifie être majeur(e).</span></label>
+          <button class="btn btn-primary btn-block" id="pay-btn" style="margin-top:8px">Payer et participer 🎮</button>
+          <div class="secure">🔒 Paiement sécurisé via Mollie (CB, Bancontact…). <span id="demo-note" class="hidden">Mode démo actif.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap"><div class="legal-note">Keep Cool Narbonne — SARL LIMA, 44 rue Demoge, 11100 Narbonne · SIRET 520 349 275 00021. Opération sans lien avec Rockstar Games, Take-Two ou Sony. Marques de leurs titulaires respectifs.</div></div></footer>
+
+<script src="boutique.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Paiement (démo) — GTA VI × Keep Cool</title>
+<link rel="icon" type="image/png" href="assets/favicon.png" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header class="nav"><div class="wrap nav-inner">
+  <div class="brand"><img src="assets/logo-mark.png" alt="" class="brand-logo" /> PAIEMENT · DÉMO</div>
+</div></header>
+
+<section>
+  <div class="wrap">
+    <div class="form-card" style="max-width:460px;text-align:center">
+      <div class="pill" style="margin-bottom:12px">⚠️ Mode démonstration</div>
+      <h2>Simulateur de paiement</h2>
+      <p class="hint">Aucune vraie clé Mollie n'est configurée. Cette page remplace la page de paiement Mollie pour te permettre de tester le parcours complet.</p>
+      <p>Commande <b id="num"></b><br>Montant : <b id="montant">…</b></p>
+      <button class="btn btn-primary btn-block" id="ok" style="margin-top:10px">✅ Simuler un paiement réussi</button>
+      <a class="btn btn-ghost btn-block" id="ko" style="margin-top:10px" href="boutique.html">❌ Annuler</a>
+      <p class="hint" style="margin-top:14px">En production, renseigne <code>MOLLIE_API_KEY</code> : le client sera redirigé vers la vraie page sécurisée Mollie.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+const numero = new URLSearchParams(location.search).get('cmd');
+document.getElementById('num').textContent = numero || '—';
+(async () => {
+  try { const d = await (await fetch('/api/commande/' + encodeURIComponent(numero))).json();
+    if (d.ok) document.getElementById('montant').textContent = (d.montant_total/100).toFixed(2).replace('.', ',') + ' €'; } catch(e){}
+})();
+document.getElementById('ok').addEventListener('click', async () => {
+  document.getElementById('ok').disabled = true; document.getElementById('ok').textContent = 'Traitement…';
+  try {
+    await fetch('/api/demo/payer', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ numero }) });
+  } catch(e){}
+  window.location = 'merci.html?cmd=' + encodeURIComponent(numero);
+});
+</script>
+</body>
+</html>

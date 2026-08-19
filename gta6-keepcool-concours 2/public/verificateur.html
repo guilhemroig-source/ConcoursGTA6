@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vérificateur du tirage — GTA VI x Keep Cool</title>
+<link rel="icon" type="image/png" href="assets/favicon.png" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  textarea { width:100%; min-height:160px; padding:12px 14px; border-radius:12px; border:1px solid var(--card-border); background:rgba(0,0,0,.25); color:var(--text); font-family:monospace; font-size:.9rem; }
+  .vrow { display:flex; gap:12px; padding:8px 12px; border-bottom:1px solid var(--card-border); font-size:.9rem; }
+  .vrow .r { width:44px; font-family:'Anton'; color:var(--cyan); }
+  .vrow.win-ps5 { background:rgba(255,46,136,.1); }
+  .vrow.win-gta { background:rgba(34,224,224,.08); }
+  code.h { font-family:monospace; color:var(--muted); font-size:.8rem; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><img src="assets/logo-mark.png" alt="" class="brand-logo" /> VÉRIFICATEUR · GTA VI</div>
+    <nav class="nav-links"><a href="index.html">← Accueil</a><a href="reglement.html">Règlement</a></nav>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Transparence totale</span>
+      <h2>Vérifier le tirage au sort</h2>
+      <p>Le tirage est <b>reproductible</b> : avec la graine publique et la liste des codes participants, ce calcul (100 % dans votre navigateur) redonne exactement le même classement que celui de l'organisateur. Aucune donnée n'est envoyée à un serveur.</p>
+    </div>
+
+    <div class="grid-2" style="align-items:start">
+      <div class="card">
+        <h3>1. La graine publique</h3>
+        <div class="field"><input type="text" id="seed" placeholder="colle ici la graine annoncée" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--card-border);background:rgba(0,0,0,.25);color:var(--text)" /></div>
+        <h3 style="margin-top:18px">2. Les codes participants</h3>
+        <p class="hint">Un code par ligne (les colonnes après une virgule, ex. nom, sont ignorées pour le calcul). Vous pouvez coller le CSV export.</p>
+        <textarea id="codes" placeholder="GTA6-AB12-CD34
+GTA6-EF56-GH78
+..."></textarea>
+        <div class="field" style="margin-top:12px">
+          <label>Nombre de gagnants (lot PS5 + GTA VI)</label>
+          <input type="text" id="ngagnants" value="3" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--card-border);background:rgba(0,0,0,.25);color:var(--text)">
+        </div>
+        <button class="btn btn-primary btn-block" id="verify-btn">🔎 Recalculer le classement</button>
+      </div>
+
+      <div class="card">
+        <h3>Résultat recalculé</h3>
+        <div id="out" class="hint">Renseignez la graine et les codes, puis lancez le calcul.</div>
+      </div>
+    </div>
+
+    <div class="card mt">
+      <h3>Comment ça marche ?</h3>
+      <p class="hint">Pour chaque participant, on calcule l'empreinte <code>SHA-256(graine + "|" + code)</code>. On trie les participants par empreinte croissante. Les 5 premiers gagnent une PS5, les 5 suivants un jeu GTA VI, etc. Comme la fonction SHA-256 est publique et déterministe, personne ne peut prédire ni manipuler le classement sans changer la graine (annoncée à l'avance) — ce qui rend toute triche détectable.</p>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap"><div class="legal-note">Opération sans lien avec Rockstar Games, Take-Two ou Sony. Marques citées : propriété de leurs titulaires respectifs.</div></div></footer>
+
+<script>
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+document.getElementById('verify-btn').addEventListener('click', async () => {
+  const seed = document.getElementById('seed').value.trim();
+  const ngagnants = parseInt(document.getElementById('ngagnants').value || '5', 10);
+  const out = document.getElementById('out');
+
+  if (seed.length < 4) { out.innerHTML = '<span style="color:var(--err)">Graine trop courte.</span>'; return; }
+
+  const codes = document.getElementById('codes').value
+    .split(/\r?\n/)
+    .map((l) => l.split(',')[0].trim().toUpperCase())
+    .filter((c) => c && c.toLowerCase() !== 'code');
+
+  if (!codes.length) { out.innerHTML = '<span style="color:var(--err)">Aucun code fourni.</span>'; return; }
+
+  out.textContent = 'Calcul en cours…';
+  const items = [];
+  for (const code of codes) items.push({ code, empreinte: await sha256Hex(seed + '|' + code) });
+  items.sort((a, b) => (a.empreinte < b.empreinte ? -1 : a.empreinte > b.empreinte ? 1 : a.code < b.code ? -1 : 1));
+
+  let html = `<p class="hint">${items.length} participants · graine « ${escapeHtml(seed)} »</p>`;
+  items.slice(0, ngagnants + 5).forEach((p, i) => {
+    const cls = i < ngagnants ? 'win-ps5' : '';
+    const lot = i < ngagnants ? '🏆 PS5 + GTA VI' : '🔁 suppl.';
+    html += `<div class="vrow ${cls}"><div class="r">${i + 1}</div><div style="flex:1"><b>${escapeHtml(p.code)}</b> — ${lot}<br><code class="h">${p.empreinte.slice(0, 32)}…</code></div></div>`;
+  });
+  out.innerHTML = html;
+});
+
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+</script>
+</body>
+</html>
