@@ -40,10 +40,32 @@
   <div class="wrap">
     <div class="section-head" style="text-align:left;margin-bottom:20px">
       <h2>Tableau de bord</h2>
-      <p>Suivi des inscriptions en salle et en ligne, export et tirage au sort.</p>
+      <p>Chiffre d'affaires, progression vers le point mort, participations et tirage au sort.</p>
     </div>
 
-    <!-- Stats -->
+    <!-- Chiffre d'affaires & activite -->
+    <div class="cards" style="margin-bottom:16px">
+      <div class="card prize"><div class="count" style="color:var(--yellow)" id="k-ca">0 €</div><h3>Chiffre d'affaires</h3><p>Encaissé (commandes payées)</p></div>
+      <div class="card prize"><div class="count pink" id="k-tshirts">0</div><h3>T-shirts vendus</h3><p>En ligne + en salle</p></div>
+      <div class="card prize"><div class="count" style="color:var(--cyan)" id="k-casq">0</div><h3>Casquettes vendues</h3><p>Bonus (+1 chance chacune)</p></div>
+      <div class="card prize"><div class="count" style="color:var(--orange)" id="k-attente">0</div><h3>Paniers en attente</h3><p>Commandes non payées</p></div>
+    </div>
+
+    <!-- Jauge point mort -->
+    <div class="card" style="margin-bottom:28px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <h3 style="margin:0">🎯 Progression vers le point mort</h3>
+        <label class="hint" style="display:flex;align-items:center;gap:8px">Objectif (t-shirts) :
+          <input type="number" id="pm-target" value="166" min="1" max="100000" style="width:90px;padding:7px 10px;border-radius:8px;border:1px solid var(--card-border);background:rgba(0,0,0,.25);color:var(--text)" />
+        </label>
+      </div>
+      <div style="margin-top:14px;background:rgba(0,0,0,.3);border-radius:999px;height:28px;overflow:hidden;border:1px solid var(--card-border)">
+        <div id="pm-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#22e0e0,#ff2e88);transition:width .5s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;font-weight:800;color:#fff;font-size:.85rem;min-width:2px"></div>
+      </div>
+      <p class="hint" id="pm-label" style="margin-top:10px">—</p>
+    </div>
+
+    <!-- Stats participations -->
     <div class="cards" style="margin-bottom:28px">
       <div class="card prize"><div class="count pink" id="s-total">0</div><h3>Participants</h3><p>Total des inscriptions valides</p></div>
       <div class="card prize"><div class="count" id="s-ligne">0</div><h3>En ligne</h3><p>Inscriptions via le site</p></div>
