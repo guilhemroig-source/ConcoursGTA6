@@ -34,7 +34,7 @@ const stmt = {
   insertCode: db.prepare("INSERT INTO codes (code, statut, participant_id) VALUES (?, 'utilise', NULL)"),
   insertParticipant: db.prepare("INSERT INTO participants (code, prenom, nom, email, telephone, source, reglement_ok, rgpd_ok, majeur_ok, ip, commande_id) VALUES (?, ?, ?, ?, ?, 'boutique', 1, 1, 1, 'boutique', ?)"),
   linkCode: db.prepare('UPDATE codes SET participant_id=? WHERE code=?'),
-  listCommandes: db.prepare('SELECT id, numero, prenom, nom, email, quantite, montant_total, statut, livraison_mode, cree_le, paye_le FROM commandes ORDER BY id DESC'),
+  listCommandes: db.prepare('SELECT id, numero, prenom, nom, email, quantite, montant_articles, frais_envoi, montant_total, statut, livraison_mode, items_json, cree_le, paye_le FROM commandes ORDER BY id DESC'),
 };
 
 function centsToValue(cents) {
@@ -146,4 +146,3 @@ module.exports = {
   markFailed: (statut, id) => stmt.markFailed.run(statut, id),
   listCommandes: () => stmt.listCommandes.all(),
 };
-
