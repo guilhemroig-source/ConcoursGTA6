@@ -40,6 +40,8 @@ const stmt = {
   delParticipant: db.prepare('DELETE FROM participants WHERE id = ?'),
   delCode: db.prepare('DELETE FROM codes WHERE code = ?'),
   setParticipantEmail: db.prepare('UPDATE participants SET email = ? WHERE id = ?'),
+  delOrder: db.prepare('DELETE FROM commandes WHERE id = ?'),
+  participantsByCommande: db.prepare('SELECT id, code FROM participants WHERE commande_id = ?'),
 };
 
 function centsToValue(cents) {
@@ -175,6 +177,23 @@ function deleteParticipant(id) {
   return { ok: true };
 }
 
+/** Supprime DEFINITIVEMENT une commande + ses participations + ses codes. */
+const deleteOrder = db.transaction((id) => {
+  const cmd = stmt.byId.get(id);
+  if (!cmd) throw httpErr(404, 'Commande introuvable.');
+  const parts = stmt.participantsByCommande.all(id);
+  for (const p of parts) {
+    stmt.delParticipant.run(p.id);
+    if (p.code) { try { stmt.delCode.run(p.code); } catch (e) {} }
+  }
+  try {
+    const codes = cmd.codes_json ? JSON.parse(cmd.codes_json) : [];
+    for (const c of codes) { try { stmt.delCode.run(c); } catch (e) {} }
+  } catch (e) {}
+  stmt.delOrder.run(id);
+  return { ok: true, numero: cmd.numero };
+});
+
 /** Corrige l'e-mail d'un participant. */
 function updateParticipantEmail(id, email) {
   const p = stmt.getParticipant.get(id);
@@ -185,7 +204,7 @@ function updateParticipantEmail(id, email) {
 
 module.exports = {
   createOrder, attachPayment, markPaidAndNotify, centsToValue,
-  importPaidOrder, updateStatuts, deleteParticipant, updateParticipantEmail,
+  importPaidOrder, updateStatuts, deleteParticipant, updateParticipantEmail, deleteOrder,
   byNumero: (n) => stmt.byNumero.get(n),
   byPayment: (p) => stmt.byPayment.get(p),
   byId: (id) => stmt.byId.get(id),
