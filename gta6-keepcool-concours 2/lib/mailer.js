@@ -35,15 +35,18 @@ function renderOrderEmail(cmd) {
   const logo = `${config.baseUrl}/assets/logo-mark.png`;
 
   const itemsRows = items
-    .map(
-      (it) => `<tr>
-        <td style="padding:10px 0;border-bottom:1px solid #2a2036;color:#f5eefb;font-size:15px">
-          T-shirt collector GTA VI — Taille <b>${esc(it.taille)}</b>
-        </td>
+    .map((it) => {
+      const casquette = it.type === 'casquette';
+      const label = casquette
+        ? 'Casquette Trucker GTA VI'
+        : `T-shirt collector GTA VI — Taille <b>${esc(it.taille)}</b>`;
+      const prixUnit = casquette ? config.prixCasquetteCents : config.prixTshirtCents;
+      return `<tr>
+        <td style="padding:10px 0;border-bottom:1px solid #2a2036;color:#f5eefb;font-size:15px">${label}</td>
         <td style="padding:10px 0;border-bottom:1px solid #2a2036;color:#b39fc9;text-align:center">× ${it.qte}</td>
-        <td style="padding:10px 0;border-bottom:1px solid #2a2036;color:#f5eefb;text-align:right">${eur(it.qte * config.prixTshirtCents)}</td>
-      </tr>`
-    )
+        <td style="padding:10px 0;border-bottom:1px solid #2a2036;color:#f5eefb;text-align:right">${eur(it.qte * prixUnit)}</td>
+      </tr>`;
+    })
     .join('');
 
   const livraison =

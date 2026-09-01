@@ -34,7 +34,12 @@ const stmt = {
   insertCode: db.prepare("INSERT INTO codes (code, statut, participant_id) VALUES (?, 'utilise', NULL)"),
   insertParticipant: db.prepare("INSERT INTO participants (code, prenom, nom, email, telephone, source, reglement_ok, rgpd_ok, majeur_ok, ip, commande_id) VALUES (?, ?, ?, ?, ?, 'boutique', 1, 1, 1, 'boutique', ?)"),
   linkCode: db.prepare('UPDATE codes SET participant_id=? WHERE code=?'),
-  listCommandes: db.prepare('SELECT id, numero, prenom, nom, email, quantite, montant_articles, frais_envoi, montant_total, statut, livraison_mode, items_json, cree_le, paye_le FROM commandes ORDER BY id DESC'),
+  listCommandes: db.prepare('SELECT id, numero, prenom, nom, email, telephone, quantite, montant_articles, frais_envoi, montant_total, statut, statut_livraison, livraison_mode, adresse, code_postal, ville, items_json, codes_json, cree_le, paye_le FROM commandes ORDER BY id DESC'),
+  setStatuts: db.prepare('UPDATE commandes SET statut = ?, statut_livraison = ? WHERE id = ?'),
+  getParticipant: db.prepare('SELECT * FROM participants WHERE id = ?'),
+  delParticipant: db.prepare('DELETE FROM participants WHERE id = ?'),
+  delCode: db.prepare('DELETE FROM codes WHERE code = ?'),
+  setParticipantEmail: db.prepare('UPDATE participants SET email = ? WHERE id = ?'),
 };
 
 function centsToValue(cents) {
@@ -138,8 +143,49 @@ function httpErr(status, message) {
   return e;
 }
 
+/**
+ * Recree une commande DEJA PAYEE (recuperation manuelle depuis l'admin, ex : paiement
+ * encaisse dans Mollie mais commande perdue). Cree la commande puis genere les codes +
+ * participations comme un paiement normal.
+ */
+async function importPaidOrder(payload) {
+  const cmd = createOrder(payload);              // cree la commande (statut en_attente)
+  const updated = await markPaidAndNotify(cmd);  // genere codes + participations, passe en payee
+  return updated;
+}
+
+/** Met a jour le statut de paiement et/ou le statut de livraison d'une commande. */
+function updateStatuts(id, statut, statut_livraison) {
+  const cmd = stmt.byId.get(id);
+  if (!cmd) throw httpErr(404, 'Commande introuvable.');
+  const okPay = ['en_attente', 'payee', 'echouee', 'annulee', 'rembourse'];
+  const okLiv = ['en_attente_distribution', 'distribue_club', 'expediee'];
+  const sp = okPay.includes(statut) ? statut : cmd.statut;
+  const sl = okLiv.includes(statut_livraison) ? statut_livraison : cmd.statut_livraison;
+  stmt.setStatuts.run(sp, sl, id);
+  return stmt.byId.get(id);
+}
+
+/** Supprime un participant (et libere/retire son code). Pour corriger une saisie. */
+function deleteParticipant(id) {
+  const p = stmt.getParticipant.get(id);
+  if (!p) throw httpErr(404, 'Participant introuvable.');
+  stmt.delParticipant.run(id);
+  if (p.code) { try { stmt.delCode.run(p.code); } catch (e) {} }
+  return { ok: true };
+}
+
+/** Corrige l'e-mail d'un participant. */
+function updateParticipantEmail(id, email) {
+  const p = stmt.getParticipant.get(id);
+  if (!p) throw httpErr(404, 'Participant introuvable.');
+  stmt.setParticipantEmail.run(String(email || '').trim().toLowerCase(), id);
+  return stmt.getParticipant.get(id);
+}
+
 module.exports = {
   createOrder, attachPayment, markPaidAndNotify, centsToValue,
+  importPaidOrder, updateStatuts, deleteParticipant, updateParticipantEmail,
   byNumero: (n) => stmt.byNumero.get(n),
   byPayment: (p) => stmt.byPayment.get(p),
   byId: (id) => stmt.byId.get(id),

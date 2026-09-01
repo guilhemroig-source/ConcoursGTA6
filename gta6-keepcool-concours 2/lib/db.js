@@ -80,4 +80,11 @@ if (!cols.includes('commande_id')) {
   db.exec('ALTER TABLE participants ADD COLUMN commande_id INTEGER');
 }
 
+// Migration douce : statut de livraison/distribution, distinct du statut de paiement.
+// Valeurs : en_attente_distribution | distribue_club | expediee
+const cmdCols = db.prepare("PRAGMA table_info(commandes)").all().map((c) => c.name);
+if (!cmdCols.includes('statut_livraison')) {
+  db.exec("ALTER TABLE commandes ADD COLUMN statut_livraison TEXT NOT NULL DEFAULT 'en_attente_distribution'");
+}
+
 module.exports = db;

@@ -79,6 +79,7 @@ app.get('/api/config', (req, res) => {
     nbGTA6: config.nbGTA6,
     prixTshirt: config.prixTshirt,
     prixTshirtCents: config.prixTshirtCents,
+    prixCasquetteCents: config.prixCasquetteCents,
     fraisEnvoiCents: config.fraisEnvoiCents,
     tailles: config.tailles,
     devise: config.devise,
@@ -206,6 +207,61 @@ app.get('/api/admin/participants', requireAdmin, (req, res) => {
 
 app.get('/api/admin/commandes', requireAdmin, (req, res) => {
   res.json({ ok: true, commandes: orders.listCommandes() });
+});
+
+// Recuperer manuellement une commande DEJA PAYEE (ex : paiement Mollie encaisse mais
+// commande perdue). Genere codes + participations et la compte dans le CA.
+app.post('/api/admin/commande/importer', requireAdmin, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const payload = {
+      items: Array.isArray(b.items) ? b.items : [],
+      casquettes: parseInt(b.casquettes, 10) || 0,
+      prenom: clean(b.prenom),
+      nom: clean(b.nom),
+      email: clean(b.email).toLowerCase(),
+      telephone: clean(b.telephone),
+      livraison_mode: b.livraison_mode === 'domicile' ? 'domicile' : 'retrait',
+      adresse: clean(b.adresse),
+      code_postal: clean(b.code_postal),
+      ville: clean(b.ville),
+    };
+    const cmd = await orders.importPaidOrder(payload);
+    res.json({ ok: true, numero: cmd.numero, codes: cmd.codes_json ? JSON.parse(cmd.codes_json) : [] });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, error: e.message });
+  }
+});
+
+// Mettre a jour le statut de paiement et/ou de livraison d'une commande.
+app.post('/api/admin/commande/:id/statut', requireAdmin, (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const cmd = orders.updateStatuts(id, clean(req.body.statut), clean(req.body.statut_livraison));
+    res.json({ ok: true, commande: cmd });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, error: e.message });
+  }
+});
+
+// Supprimer un participant (corriger une saisie).
+app.post('/api/admin/participant/:id/supprimer', requireAdmin, (req, res) => {
+  try {
+    orders.deleteParticipant(parseInt(req.params.id, 10));
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, error: e.message });
+  }
+});
+
+// Corriger l'e-mail d'un participant.
+app.post('/api/admin/participant/:id/email', requireAdmin, (req, res) => {
+  try {
+    const p = orders.updateParticipantEmail(parseInt(req.params.id, 10), clean(req.body.email));
+    res.json({ ok: true, participant: p });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, error: e.message });
+  }
 });
 
 // Inscription en salle (staff a l'accueil)

@@ -3,6 +3,7 @@
    ========================================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap');
+@font-face { font-family: 'Pricedown'; src: url('assets/pricedown.ttf') format('opentype'); font-weight: normal; font-style: normal; font-display: swap; }
 
 :root {
   --pink: #ff2e88;
@@ -46,7 +47,7 @@ a:hover { text-decoration: underline; }
 
 /* --------------------------------------------------------------- Typography */
 h1, h2, h3, .display {
-  font-family: 'Anton', sans-serif;
+  font-family: 'Pricedown', 'Anton', sans-serif;
   font-weight: 400;
   letter-spacing: 0.5px;
   line-height: 1.02;
@@ -79,7 +80,7 @@ header.nav {
   border-bottom: 1px solid var(--card-border);
 }
 .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
-.brand { font-family: 'Anton', sans-serif; font-size: 1.35rem; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+.brand { font-family: 'Pricedown', 'Anton', sans-serif; font-size: 1.35rem; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
 .brand span { color: var(--pink); }
 .brand-logo { height: 40px; width: auto; filter: drop-shadow(0 0 10px rgba(255,46,136,.5)); }
 .nav-links { display: flex; gap: 22px; align-items: center; }
@@ -119,7 +120,7 @@ header.nav {
   background: rgba(0,0,0,0.35); border: 1px dashed rgba(255,255,255,0.4);
   border-radius: 12px; padding: 10px 12px; font-size: 0.82rem; color: #fff;
 }
-.hero-visual .big-vi { font-family: 'Anton'; font-size: clamp(4rem, 16vw, 9rem); color: #fff; text-shadow: 0 6px 30px rgba(0,0,0,0.4); letter-spacing: 2px; }
+.hero-visual .big-vi { font-family: 'Pricedown', 'Anton', sans-serif; font-size: clamp(4rem, 16vw, 9rem); color: #fff; text-shadow: 0 6px 30px rgba(0,0,0,0.4); letter-spacing: 2px; }
 
 /* ------------------------------------------------------------------ Buttons */
 .btn {
@@ -169,11 +170,11 @@ section { padding: 56px 0; }
   box-shadow: 0 18px 50px rgba(255,46,136,0.28);
 }
 .prize-figure figcaption {
-  margin-top: 12px; font-family: 'Anton', sans-serif; text-transform: uppercase;
+  margin-top: 12px; font-family: 'Pricedown', 'Anton', sans-serif; text-transform: uppercase;
   letter-spacing: 1px; font-size: 1.05rem; color: var(--text);
 }
 .prize-plus, .prize-eq {
-  font-family: 'Anton', sans-serif; font-size: 2.6rem; color: var(--cyan);
+  font-family: 'Pricedown', 'Anton', sans-serif; font-size: 2.6rem; color: var(--cyan);
   text-shadow: 0 0 20px rgba(34,224,224,.5);
 }
 .prize-bundle {
@@ -181,10 +182,10 @@ section { padding: 56px 0; }
   background: linear-gradient(135deg, rgba(255,46,136,.22), rgba(123,47,247,.18));
   border: 1px solid var(--card-border); border-radius: 20px; padding: 18px 22px;
 }
-.prize-bundle-num { font-family: 'Anton', sans-serif; font-size: 3.2rem; color: var(--pink); line-height: 1; }
+.prize-bundle-num { font-family: 'Pricedown', 'Anton', sans-serif; font-size: 3.2rem; color: var(--pink); line-height: 1; }
 .prize-bundle b { color: var(--cyan); }
 @media (max-width: 700px) { .prize-plus, .prize-eq { transform: rotate(90deg); } }
-.prize .count { font-family: 'Anton'; font-size: 3rem; color: var(--cyan); line-height: 1; }
+.prize .count { font-family: 'Pricedown', 'Anton', sans-serif; font-size: 3rem; color: var(--cyan); line-height: 1; }
 .prize .count.pink { color: var(--pink); }
 
 /* ------------------------------------------------------------------- Steps */
@@ -192,7 +193,7 @@ section { padding: 56px 0; }
 .step { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 24px 22px 22px; position: relative; }
 .step::before {
   counter-increment: step; content: counter(step);
-  font-family: 'Anton'; font-size: 1.4rem; color: #fff;
+  font-family: 'Pricedown', 'Anton', sans-serif; font-size: 1.4rem; color: #fff;
   width: 44px; height: 44px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, var(--pink), var(--violet));

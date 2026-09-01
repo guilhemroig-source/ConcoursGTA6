@@ -113,15 +113,46 @@
       </div>
     </div>
 
+    <!-- Vente manuelle / recuperation commande payee -->
+    <div class="card" style="margin-top:24px;border-color:var(--cyan)">
+      <h3 style="margin:0 0 6px">🧾 Rentrer une vente (commande payée)</h3>
+      <p class="hint" style="margin-bottom:14px">Enregistre une vente encaissée (en salle, espèces, ou récupération). La commande apparaît en « payée », compte dans le CA, et génère automatiquement le(s) code(s) de participation (1 par t-shirt + 1 par casquette).</p>
+      <div id="vente-alert" class="alert"></div>
+      <div class="row2">
+        <div class="field"><label>Prénom *</label><input type="text" id="v-prenom" /></div>
+        <div class="field"><label>Nom *</label><input type="text" id="v-nom" /></div>
+      </div>
+      <div class="field"><label>Email</label><input type="email" id="v-email" placeholder="pour lui envoyer son code" /></div>
+      <div class="row2">
+        <div class="field"><label>Taille du t-shirt</label>
+          <select id="v-taille" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--card-border);background:rgba(0,0,0,.3);color:var(--text)">
+            <option value="S">S</option><option value="M" selected>M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option>
+          </select>
+        </div>
+        <div class="field"><label>Nombre de t-shirts</label><input type="number" id="v-qte" value="1" min="1" max="20" /></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Casquettes (+1 chance chacune)</label><input type="number" id="v-casq" value="0" min="0" max="20" /></div>
+        <div class="field"><label>Mode</label>
+          <select id="v-livr" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--card-border);background:rgba(0,0,0,.3);color:var(--text)">
+            <option value="retrait" selected>Retrait / en salle</option><option value="domicile">Livraison domicile</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-cyan btn-block" id="vente-btn" style="margin-top:6px">Enregistrer la vente payée</button>
+    </div>
+
     <!-- Commandes en ligne -->
     <div class="card" style="margin-top:24px">
       <h3 style="margin:0 0 12px">Commandes en ligne (boutique)</h3>
+      <div id="cmd-alert" class="alert"></div>
       <div style="overflow:auto">
         <table>
-          <thead><tr><th>N° commande</th><th>Client</th><th>Email</th><th>Qté</th><th>Total</th><th>Livraison</th><th>Statut</th><th>Date</th></tr></thead>
-          <tbody id="cmd-rows"><tr><td colspan="8" class="hint">Aucune commande.</td></tr></tbody>
+          <thead><tr><th>N° commande</th><th>Client</th><th>Détail</th><th>Total</th><th>Paiement</th><th>Distribution</th><th>Date</th></tr></thead>
+          <tbody id="cmd-rows"><tr><td colspan="7" class="hint">Aucune commande.</td></tr></tbody>
         </table>
       </div>
+      <p class="hint" style="margin-top:8px">Change un statut directement dans le menu déroulant : c'est enregistré automatiquement.</p>
     </div>
 
     <!-- Table -->

@@ -28,6 +28,8 @@ async function doLogin(token) {
   $('dash').classList.remove('hidden');
   $('logout').classList.remove('hidden');
   await refresh();
+  // Actualisation automatique du tableau de bord (CA, ventes, jauge) toutes les 20 s.
+  if (!window.__refreshTimer) window.__refreshTimer = setInterval(() => { refresh().catch(() => {}); }, 20000);
 }
 
 async function refresh() {
@@ -97,21 +99,55 @@ function renderKPIs() {
   }
 }
 
+function fmtItems(json) {
+  let items = [];
+  try { items = JSON.parse(json || '[]'); } catch (e) {}
+  const parts = items.map((it) => (it.type === 'casquette')
+    ? '🧢 Casquette ×' + (it.qte || 1)
+    : escapeHtml(it.taille || '?') + ' ×' + (it.qte || 1));
+  return parts.join(' · ') || '—';
+}
+function payOptions(sel) {
+  return [['payee', 'Payée'], ['rembourse', 'Remboursé'], ['en_attente', 'En attente'], ['echouee', 'Échouée'], ['annulee', 'Annulée']]
+    .map(([v, l]) => '<option value="' + v + '"' + (v === sel ? ' selected' : '') + '>' + l + '</option>').join('');
+}
+function livOptions(sel) {
+  return [['en_attente_distribution', 'En attente de distribution'], ['distribue_club', 'Distribué en club'], ['expediee', 'Expédiée']]
+    .map(([v, l]) => '<option value="' + v + '"' + (v === sel ? ' selected' : '') + '>' + l + '</option>').join('');
+}
+
 function renderCommandes(list) {
   const eur = (c) => (c / 100).toFixed(2).replace('.', ',') + ' €';
-  const badge = { payee: 'en_ligne', en_attente: 'en_salle', echouee: 'en_salle', expediee: 'en_ligne' };
   const el = document.getElementById('cmd-rows');
-  if (!list.length) { el.innerHTML = '<tr><td colspan="8" class="hint">Aucune commande.</td></tr>'; return; }
+  if (!list.length) { el.innerHTML = '<tr><td colspan="7" class="hint">Aucune commande.</td></tr>'; return; }
+  const sst = 'padding:6px 8px;border-radius:8px;border:1px solid var(--card-border);background:rgba(0,0,0,.35);color:var(--text);font-size:.82rem';
   el.innerHTML = list.map((c) => `<tr>
     <td style="font-family:monospace">${escapeHtml(c.numero)}</td>
-    <td>${escapeHtml(c.prenom)} ${escapeHtml(c.nom)}</td>
-    <td>${escapeHtml(c.email)}</td>
-    <td>${c.quantite}</td>
+    <td>${escapeHtml(c.prenom)} ${escapeHtml(c.nom)}<br><span class="hint" style="font-size:.78rem">${escapeHtml(c.email || '')}</span></td>
+    <td>${fmtItems(c.items_json)}</td>
     <td>${eur(c.montant_total)}</td>
-    <td>${c.livraison_mode === 'retrait' ? 'Retrait' : 'Domicile'}</td>
-    <td><span class="tag ${c.statut === 'payee' ? 'en_ligne' : 'en_salle'}">${escapeHtml(c.statut)}</span></td>
+    <td><select class="st-pay" data-id="${c.id}" style="${sst}">${payOptions(c.statut)}</select></td>
+    <td><select class="st-liv" data-id="${c.id}" style="${sst}">${livOptions(c.statut_livraison)}</select><br><span class="hint" style="font-size:.76rem">${c.livraison_mode === 'retrait' ? 'Retrait salle' : 'Domicile'}</span></td>
     <td>${escapeHtml(c.cree_le)}</td>
   </tr>`).join('');
+
+  el.onchange = async (e) => {
+    const s = e.target;
+    if (!s.classList || (!s.classList.contains('st-pay') && !s.classList.contains('st-liv'))) return;
+    const id = s.dataset.id;
+    const tr = s.closest('tr');
+    const statut = tr.querySelector('.st-pay').value;
+    const statut_livraison = tr.querySelector('.st-liv').value;
+    const al = document.getElementById('cmd-alert');
+    s.disabled = true;
+    try {
+      const r = await api('/api/admin/commande/' + id + '/statut', { method: 'POST', body: JSON.stringify({ statut, statut_livraison }) });
+      const d = await r.json();
+      if (d.ok) { al.className = 'alert show ok'; al.textContent = 'Statut mis à jour ✅'; refresh(); }
+      else { al.className = 'alert show err'; al.textContent = d.error || 'Erreur.'; }
+    } catch (err) { al.className = 'alert show err'; al.textContent = 'Erreur réseau.'; }
+    finally { s.disabled = false; }
+  };
 }
 
 function renderRows(list) {
@@ -189,6 +225,34 @@ document.addEventListener('DOMContentLoaded', () => {
       } else { al.className = 'alert show err'; al.textContent = d.error || 'Erreur.'; }
     } catch (e) { al.className = 'alert show err'; al.textContent = 'Erreur réseau.'; }
     finally { $('gen-btn').disabled = false; $('gen-btn').textContent = 'Générer'; }
+  });
+
+  $('vente-btn').addEventListener('click', async () => {
+    const prenom = $('v-prenom').value.trim();
+    const nom = $('v-nom').value.trim();
+    const qte = Math.max(1, Math.min(20, parseInt($('v-qte').value, 10) || 1));
+    const casq = Math.max(0, Math.min(20, parseInt($('v-casq').value, 10) || 0));
+    const al = $('vente-alert');
+    if (!prenom || !nom) { al.className = 'alert show err'; al.textContent = 'Prénom et nom obligatoires.'; return; }
+    const payload = {
+      prenom, nom, email: $('v-email').value.trim(),
+      items: [{ taille: $('v-taille').value, qte }],
+      casquettes: casq,
+      livraison_mode: $('v-livr').value,
+    };
+    $('vente-btn').disabled = true; $('vente-btn').textContent = 'Enregistrement…';
+    try {
+      const r = await api('/api/admin/commande/importer', { method: 'POST', body: JSON.stringify(payload) });
+      const d = await r.json();
+      if (d.ok) {
+        al.className = 'alert show ok';
+        al.innerHTML = 'Vente enregistrée ✅ — n° ' + escapeHtml(d.numero) + '. Code(s) : <b>' + (d.codes || []).join(', ') + '</b>';
+        ['v-prenom', 'v-nom', 'v-email'].forEach((id) => ($(id).value = ''));
+        $('v-qte').value = '1'; $('v-casq').value = '0';
+        refresh();
+      } else { al.className = 'alert show err'; al.textContent = d.error || 'Erreur.'; }
+    } catch (e) { al.className = 'alert show err'; al.textContent = 'Erreur réseau.'; }
+    finally { $('vente-btn').disabled = false; $('vente-btn').textContent = 'Enregistrer la vente payée'; }
   });
 
   const savedTarget = sessionStorage.getItem('pm_target');

@@ -7,8 +7,17 @@
 <link rel="icon" type="image/png" href="assets/favicon.png" />
 <link rel="stylesheet" href="styles.css" />
 <style>
-  .code-chip { display:inline-block; font-family:monospace; font-weight:bold; font-size:1.05rem; color:var(--cyan); background:#0a0410; border:1px solid var(--pink); border-radius:9px; padding:9px 15px; margin:5px 6px 5px 0; letter-spacing:1px; }
-  .big-num { font-family:'Anton'; font-size:2rem; color:var(--pink); letter-spacing:1px; }
+  .part-box { margin:22px 0; padding:26px 20px; border-radius:20px; border:2px solid var(--pink);
+    background: radial-gradient(80% 90% at 50% 0%, rgba(255,46,136,.22), transparent 70%), #0a0410; text-align:center; }
+  .part-label { text-transform:uppercase; letter-spacing:3px; font-size:.8rem; color:var(--cyan); font-weight:800; margin-bottom:10px; }
+  .part-code { font-family:'Anton'; font-size:2.9rem; line-height:1.15; color:#fff; letter-spacing:3px;
+    text-shadow:0 0 18px rgba(255,46,136,.6); word-break:break-all; margin:4px 0; }
+  .part-codes-multi .part-code { font-size:2.1rem; }
+  .part-hint { font-size:.85rem; color:var(--muted); margin-top:12px; }
+  .order-line { font-size:.9rem; color:var(--muted); margin-top:6px; }
+  .order-line b { font-family:monospace; color:var(--yellow); letter-spacing:1px; }
+  .mail-note { display:inline-flex; align-items:center; gap:8px; margin-top:8px; padding:8px 14px; border-radius:999px;
+    background:rgba(34,224,224,.1); border:1px solid rgba(34,224,224,.35); color:var(--cyan); font-size:.9rem; }
 </style>
 </head>
 <body>
@@ -22,7 +31,7 @@
 
 <section>
   <div class="wrap">
-    <div class="form-card" style="max-width:620px;text-align:center">
+    <div class="form-card" style="max-width:640px;text-align:center">
 
       <div id="pending">
         <div style="font-size:2.6rem">⏳</div>
@@ -33,16 +42,19 @@
       <div id="success" class="hidden">
         <div style="font-size:3rem">🎉</div>
         <h2 class="neon">Merci <span id="s-prenom"></span> !</h2>
-        <p>Ta commande est confirmée et payée. Un e-mail de confirmation vient de t'être envoyé.</p>
-        <p class="hint">Numéro de commande</p>
-        <div class="big-num" id="s-numero"></div>
+        <p>Ton paiement est confirmé et ta participation au tirage est enregistrée.</p>
 
-        <div class="card" style="margin-top:20px;text-align:left">
-          <h3>🎮 Ta participation au jeu</h3>
-          <p class="hint">Tu es inscrit(e) au tirage pour gagner un pack <b>PS5 + GTA VI</b>. Ton/tes code(s) :</p>
+        <div class="mail-note">📧 Un e-mail de confirmation vient de t'être envoyé.</div>
+
+        <!-- NUMERO DE PARTICIPATION EN GROS -->
+        <div class="part-box" id="part-box">
+          <div class="part-label" id="part-label">Ton numéro de participation</div>
           <div id="s-codes"></div>
-          <p class="hint" style="margin-top:10px">Tirage au sort le <b id="s-tirage"></b> — transparent et vérifiable sur <a href="verificateur.html">le vérificateur</a>.</p>
+          <div class="part-hint">Garde-le précieusement : c'est lui qui sera tiré au sort. Il t'est aussi envoyé par e-mail.</div>
         </div>
+
+        <div class="order-line">Commande n° <b id="s-numero"></b></div>
+        <p class="hint" style="margin-top:14px">Tirage au sort le <b id="s-tirage"></b> — 100 % transparent et vérifiable sur <a href="verificateur.html">le vérificateur</a>.</p>
 
         <a href="index.html" class="btn btn-primary" style="margin-top:20px">Retour à l'accueil</a>
       </div>
@@ -75,7 +87,15 @@ async function poll() {
     if (d.statut === 'payee') {
       document.getElementById('s-prenom').textContent = d.prenom || '';
       document.getElementById('s-numero').textContent = d.numero;
-      document.getElementById('s-codes').innerHTML = (d.codes || []).map((c) => `<span class="code-chip">${c}</span>`).join('') || '<span class="hint">Codes en cours d\'attribution…</span>';
+      const codes = d.codes || [];
+      const box = document.getElementById('s-codes');
+      if (codes.length) {
+        box.innerHTML = codes.map((c) => '<div class="part-code">' + c + '</div>').join('');
+        document.getElementById('part-box').classList.toggle('part-codes-multi', codes.length > 1);
+        document.getElementById('part-label').textContent = codes.length > 1 ? 'Tes numéros de participation (' + codes.length + ')' : 'Ton numéro de participation';
+      } else {
+        box.innerHTML = '<div class="part-hint">Codes en cours d\'attribution… ils arrivent dans ton e-mail.</div>';
+      }
       show('success');
       return;
     }
