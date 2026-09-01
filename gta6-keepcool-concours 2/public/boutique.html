@@ -65,6 +65,39 @@
           <p class="hint">Ajoute autant de tailles que tu veux (max 20 t-shirts / commande).</p>
         </div>
 
+        <div class="card" style="margin-bottom:18px;border-color:var(--pink)">
+          <h3>🧢 Ajoute une casquette — <span id="prix-casq">15,00 €</span></h3>
+          <p class="hint" style="margin-bottom:14px">Casquette <b>Trucker noire</b> avec le logo Social Sports Club. <b style="color:var(--cyan)">Chaque casquette = +1 chance</b> au tirage !</p>
+          <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+            <div style="flex:none;width:150px;border-radius:16px;border:1px solid var(--card-border);background:radial-gradient(70% 60% at 50% 40%,rgba(255,46,136,.25),transparent 70%),#0a0410;padding:8px">
+              <svg viewBox="0 0 300 230" width="100%" role="img" aria-label="Casquette Trucker noire avec logo">
+                <defs>
+                  <pattern id="mesh" width="7" height="7" patternUnits="userSpaceOnUse">
+                    <circle cx="1.5" cy="1.5" r="1" fill="#2b2b2b"/>
+                  </pattern>
+                </defs>
+                <ellipse cx="150" cy="192" rx="128" ry="30" fill="#080808"/>
+                <ellipse cx="150" cy="184" rx="128" ry="28" fill="#171717"/>
+                <path d="M40,176 Q40,58 150,50 Q260,58 260,176 Q150,198 40,176 Z" fill="#131313"/>
+                <path d="M52,150 Q46,95 78,66 Q60,120 66,168 Z" fill="url(#mesh)" opacity="0.9"/>
+                <path d="M248,150 Q254,95 222,66 Q240,120 234,168 Z" fill="url(#mesh)" opacity="0.9"/>
+                <path d="M96,172 Q96,82 150,76 Q204,82 204,172 Q150,184 96,172 Z" fill="#1d1d1d"/>
+                <path d="M150,60 L150,176" stroke="#2c2c2c" stroke-width="1.5"/>
+                <circle cx="150" cy="53" r="6" fill="#262626"/>
+                <image href="assets/logo-mark.png" x="103" y="92" width="94" height="74" preserveAspectRatio="xMidYMid meet"/>
+              </svg>
+            </div>
+            <div class="size-row" style="flex:1;min-width:190px;margin:0">
+              <div class="sz">🧢</div>
+              <div class="stepper">
+                <button type="button" id="casq-minus">−</button>
+                <input type="text" inputmode="numeric" id="q-casquette" value="0" />
+                <button type="button" id="casq-plus">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="card" style="margin-bottom:18px">
           <h3>2. Livraison</h3>
           <label class="radio-card sel" id="rc-domicile">
