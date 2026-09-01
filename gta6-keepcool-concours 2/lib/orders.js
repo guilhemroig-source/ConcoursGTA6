@@ -18,16 +18,11 @@ function block(len) {
   return out;
 }
 function newCode() {
-  return `GTA6-${block(4)}-${block(4)}`;
+  return 'GTA6-' + block(4) + '-' + block(4);
 }
 
 const stmt = {
-  insert: db.prepare(`
-    INSERT INTO commandes (numero, prenom, nom, email, telephone, livraison_mode, adresse, code_postal, ville,
-      items_json, quantite, montant_articles, frais_envoi, montant_total, statut, mollie_payment_id)
-    VALUES (@numero,@prenom,@nom,@email,@telephone,@livraison_mode,@adresse,@code_postal,@ville,
-      @items_json,@quantite,@montant_articles,@frais_envoi,@montant_total,'en_attente',NULL)
-  `),
+  insert: db.prepare("INSERT INTO commandes (numero, prenom, nom, email, telephone, livraison_mode, adresse, code_postal, ville, items_json, quantite, montant_articles, frais_envoi, montant_total, statut, mollie_payment_id) VALUES (@numero,@prenom,@nom,@email,@telephone,@livraison_mode,@adresse,@code_postal,@ville,@items_json,@quantite,@montant_articles,@frais_envoi,@montant_total,'en_attente',NULL)"),
   setNumero: db.prepare('UPDATE commandes SET numero = ? WHERE id = ?'),
   setPayment: db.prepare('UPDATE commandes SET mollie_payment_id = ? WHERE id = ?'),
   byNumero: db.prepare('SELECT * FROM commandes WHERE numero = ?'),
@@ -37,16 +32,13 @@ const stmt = {
   markFailed: db.prepare("UPDATE commandes SET statut=? WHERE id=?"),
   markEmail: db.prepare('UPDATE commandes SET email_envoye=1 WHERE id=?'),
   insertCode: db.prepare("INSERT INTO codes (code, statut, participant_id) VALUES (?, 'utilise', NULL)"),
-  insertParticipant: db.prepare(`
-    INSERT INTO participants (code, prenom, nom, email, telephone, source, reglement_ok, rgpd_ok, majeur_ok, ip, commande_id)
-    VALUES (?, ?, ?, ?, ?, 'boutique', 1, 1, 1, 'boutique', ?)
-  `),
+  insertParticipant: db.prepare("INSERT INTO participants (code, prenom, nom, email, telephone, source, reglement_ok, rgpd_ok, majeur_ok, ip, commande_id) VALUES (?, ?, ?, ?, ?, 'boutique', 1, 1, 1, 'boutique', ?)"),
   linkCode: db.prepare('UPDATE codes SET participant_id=? WHERE code=?'),
   listCommandes: db.prepare('SELECT id, numero, prenom, nom, email, quantite, montant_total, statut, livraison_mode, cree_le, paye_le FROM commandes ORDER BY id DESC'),
 };
 
 function centsToValue(cents) {
-  return (cents / 100).toFixed(2); // "28.50"
+  return (cents / 100).toFixed(2); // ex 28.50
 }
 
 /** Valide et calcule une commande a partir du payload client. */
@@ -58,11 +50,15 @@ function buildOrder(payload) {
     const taille = String(it.taille || '').toUpperCase();
     const qte = Math.max(0, Math.min(20, parseInt(it.qte, 10) || 0));
     if (!config.tailles.includes(taille) || qte === 0) continue;
-    clean.push({ taille, qte });
+    clean.push({ type: 'tshirt', taille, qte });
     quantite += qte;
   }
-  if (quantite === 0) throw httpErr(400, 'Sélectionnez au moins un t-shirt.');
-  if (quantite > 20) throw httpErr(400, 'Quantité maximale : 20 t-shirts par commande.');
+  // Casquette(s) : chaque casquette = +1 chance au tirage
+  const casquettes = Math.max(0, Math.min(20, parseInt(payload.casquettes, 10) || 0));
+  if (casquettes > 0) clean.push({ type: 'casquette', qte: casquettes });
+  const totalUnites = quantite + casquettes;
+  if (quantite === 0) throw httpErr(400, 'Selectionnez au moins un t-shirt (obligatoire pour participer). La casquette est un bonus.');
+  if (totalUnites > 20) throw httpErr(400, 'Quantite maximale : 20 articles par commande.');
 
   const prenom = String(payload.prenom || '').trim();
   const nom = String(payload.nom || '').trim();
@@ -70,25 +66,25 @@ function buildOrder(payload) {
   const telephone = String(payload.telephone || '').trim();
   const livraison_mode = payload.livraison_mode === 'retrait' ? 'retrait' : 'domicile';
 
-  if (!prenom || !nom) throw httpErr(400, 'Prénom et nom obligatoires.');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw httpErr(400, 'Email invalide.');
+  if (!prenom || !nom) throw httpErr(400, 'Prenom et nom obligatoires.');
+  if (!/^[^ @]+@[^ @]+[.][^ @]+$/.test(email)) throw httpErr(400, 'Email invalide.');
 
   let adresse = '', code_postal = '', ville = '';
   if (livraison_mode === 'domicile') {
     adresse = String(payload.adresse || '').trim();
     code_postal = String(payload.code_postal || '').trim();
     ville = String(payload.ville || '').trim();
-    if (!adresse || !code_postal || !ville) throw httpErr(400, 'Adresse de livraison incomplète.');
+    if (!adresse || !code_postal || !ville) throw httpErr(400, 'Adresse de livraison incomplete.');
   }
 
-  const montant_articles = quantite * config.prixTshirtCents;
+  const montant_articles = quantite * config.prixTshirtCents + casquettes * config.prixCasquetteCents;
   const frais_envoi = livraison_mode === 'domicile' ? config.fraisEnvoiCents : 0;
   const montant_total = montant_articles + frais_envoi;
 
   return {
     numero: 'TMP-' + block(8),
     prenom, nom, email, telephone, livraison_mode, adresse, code_postal, ville,
-    items_json: JSON.stringify(clean), quantite, montant_articles, frais_envoi, montant_total,
+    items_json: JSON.stringify(clean), quantite: totalUnites, montant_articles, frais_envoi, montant_total,
   };
 }
 
@@ -96,7 +92,7 @@ const createOrder = db.transaction((payload) => {
   const data = buildOrder(payload);
   const info = stmt.insert.run(data);
   const id = info.lastInsertRowid;
-  const numero = `SSC-${new Date().getFullYear()}-${String(id).padStart(5, '0')}`;
+  const numero = 'SSC-' + new Date().getFullYear() + '-' + String(id).padStart(5, '0');
   stmt.setNumero.run(numero, id);
   return stmt.byId.get(id);
 });
@@ -111,7 +107,6 @@ const finalizePaid = db.transaction((cmd) => {
   const codes = [];
   for (let i = 0; i < cmd.quantite; i++) {
     let code = newCode();
-    // garantir l'unicite
     while (db.prepare('SELECT 1 FROM codes WHERE code=?').get(code)) code = newCode();
     stmt.insertCode.run(code);
     const pInfo = stmt.insertParticipant.run(code, cmd.prenom, cmd.nom, cmd.email, cmd.telephone, cmd.id);
@@ -131,7 +126,7 @@ async function markPaidAndNotify(cmd) {
       await sendOrderEmail(updated);
       stmt.markEmail.run(cmd.id);
     } catch (e) {
-      console.error('  ⚠️  Envoi e-mail commande', cmd.numero, ':', e.message);
+      console.error('  Envoi e-mail commande', cmd.numero, ':', e.message);
     }
   }
   return stmt.byId.get(cmd.id);
@@ -151,3 +146,4 @@ module.exports = {
   markFailed: (statut, id) => stmt.markFailed.run(statut, id),
   listCommandes: () => stmt.listCommandes.all(),
 };
+
