@@ -9,12 +9,19 @@
 
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 const nodemailer = require('nodemailer');
 const config = require('./config');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const EMAIL_DIR = path.join(DATA_DIR, 'emails');
 if (!fs.existsSync(EMAIL_DIR)) fs.mkdirSync(EMAIL_DIR, { recursive: true });
+
+// Cle API Brevo (v3). Priorite a l'API HTTP (port 443, jamais bloque par l'hebergeur,
+// contrairement au SMTP souvent filtre). On accepte BREVO_API_KEY, ou la valeur de
+// SMTP_PASS si c'est une cle "xkeysib-...".
+const BREVO_API_KEY = process.env.BREVO_API_KEY
+  || ((config.smtp.pass && /^xkeysib-/i.test(config.smtp.pass)) ? config.smtp.pass : '');
 
 let transporter = null;
 if (config.smtp.host) {
@@ -23,6 +30,37 @@ if (config.smtp.host) {
     port: config.smtp.port,
     secure: config.smtp.secure,
     auth: config.smtp.user ? { user: config.smtp.user, pass: config.smtp.pass } : undefined,
+  });
+}
+
+// Separe "Nom <email>" en { name, email }.
+function parseFrom(from) {
+  const m = String(from || '').match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+  if (m) return { name: m[1] || 'Keep Cool Narbonne', email: m[2].trim() };
+  return { name: 'Keep Cool Narbonne', email: String(from || '').trim() };
+}
+
+// Envoi via l'API transactionnelle Brevo (HTTPS).
+function sendViaBrevoApi({ subject, html, text, to, bcc }) {
+  return new Promise((resolve, reject) => {
+    const payload = { sender: parseFrom(config.mailFrom), to: [{ email: to }], subject, htmlContent: html, textContent: text };
+    if (bcc) payload.bcc = [{ email: bcc }];
+    const data = Buffer.from(JSON.stringify(payload), 'utf8');
+    const req = https.request({
+      method: 'POST', hostname: 'api.brevo.com', path: '/v3/smtp/email',
+      headers: { 'api-key': BREVO_API_KEY, 'content-type': 'application/json', 'accept': 'application/json', 'content-length': data.length },
+    }, (res) => {
+      let body = '';
+      res.on('data', (c) => (body += c));
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) resolve(body);
+        else reject(new Error('Brevo API ' + res.statusCode + ' : ' + body));
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(15000, () => req.destroy(new Error('Brevo API timeout')));
+    req.write(data);
+    req.end();
   });
 }
 
@@ -157,20 +195,21 @@ async function sendOrderEmail(cmd) {
   // Sauvegarde systematique d'une copie previsualisable
   try { fs.writeFileSync(path.join(EMAIL_DIR, `${cmd.numero}.html`), html); } catch (e) {}
 
-  if (!transporter) {
-    console.log(`  ✉️  [MODE FICHIER] E-mail de la commande ${cmd.numero} ecrit dans data/emails/${cmd.numero}.html (SMTP non configure).`);
-    return { delivered: false, preview: `data/emails/${cmd.numero}.html` };
+  // 1. API HTTP Brevo (recommande : fiable meme si le port SMTP est bloque).
+  if (BREVO_API_KEY) {
+    await sendViaBrevoApi({ subject, html, text, to: cmd.email, bcc: config.mailBcc });
+    console.log(`  ✉️  E-mail (API Brevo) envoye a ${cmd.email} (commande ${cmd.numero}).`);
+    return { delivered: true };
   }
-  await transporter.sendMail({
-    from: config.mailFrom,
-    to: cmd.email,
-    bcc: config.mailBcc || undefined,
-    subject,
-    html,
-    text,
-  });
-  console.log(`  ✉️  E-mail de confirmation envoye a ${cmd.email} (commande ${cmd.numero}).`);
-  return { delivered: true };
+  // 2. SMTP classique.
+  if (transporter) {
+    await transporter.sendMail({ from: config.mailFrom, to: cmd.email, bcc: config.mailBcc || undefined, subject, html, text });
+    console.log(`  ✉️  E-mail (SMTP) envoye a ${cmd.email} (commande ${cmd.numero}).`);
+    return { delivered: true };
+  }
+  // 3. Mode fichier (aucun envoi configure).
+  console.log(`  ✉️  [MODE FICHIER] E-mail de la commande ${cmd.numero} ecrit dans data/emails/${cmd.numero}.html (envoi non configure).`);
+  return { delivered: false, preview: `data/emails/${cmd.numero}.html` };
 }
 
 module.exports = { renderOrderEmail, sendOrderEmail };
