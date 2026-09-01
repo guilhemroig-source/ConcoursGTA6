@@ -87,4 +87,19 @@ if (!cmdCols.includes('statut_livraison')) {
   db.exec("ALTER TABLE commandes ADD COLUMN statut_livraison TEXT NOT NULL DEFAULT 'en_attente_distribution'");
 }
 
+// Statistiques de visite (comptage anonyme, RGPD-friendly : pas d'IP en clair,
+// on stocke un identifiant hache par visiteur/jour).
+db.exec(`
+CREATE TABLE IF NOT EXISTS visites (
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  jour      TEXT NOT NULL,            -- AAAA-MM-JJ
+  path      TEXT NOT NULL,            -- page vue
+  referer   TEXT,                     -- domaine d'origine (hors site)
+  visitor   TEXT NOT NULL,            -- hash anonyme (ip+ua+jour+sel)
+  cree_le   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_visites_jour ON visites(jour);
+CREATE INDEX IF NOT EXISTS idx_visites_visitor ON visites(visitor);
+`);
+
 module.exports = db;
