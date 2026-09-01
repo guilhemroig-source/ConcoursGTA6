@@ -2,8 +2,11 @@
 
 let TOKEN = sessionStorage.getItem('admin_token') || '';
 let ALL = [];
+let CMDS = [];            // commandes en ligne
+let SALLE_COUNT = 0;      // participations enregistrees en salle
 
 const $ = (id) => document.getElementById(id);
+const eurC = (c) => (c / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/, ' ') + ' €';
 
 function api(path, opts = {}) {
   return fetch(path, {
@@ -36,6 +39,7 @@ async function refresh() {
   $('s-ligne').textContent = ligne;
   $('s-salle').textContent = salle;
   $('s-codes').textContent = dispo;
+  SALLE_COUNT = salle;
 
   const tl = $('tirages-list');
   if (stats.tirages && stats.tirages.length) {
@@ -52,8 +56,45 @@ async function refresh() {
 
   try {
     const cd = await (await api('/api/admin/commandes')).json();
-    renderCommandes(cd.commandes || []);
-  } catch (e) {}
+    CMDS = cd.commandes || [];
+    renderCommandes(CMDS);
+  } catch (e) { CMDS = []; }
+
+  renderKPIs();
+}
+
+// Calcule le chiffre d'affaires, les ventes et la progression vers le point mort.
+function renderKPIs() {
+  const paid = CMDS.filter((c) => c.statut === 'payee');
+  let ca = 0, tOnline = 0, casq = 0;
+  paid.forEach((c) => {
+    ca += c.montant_total || 0;
+    try {
+      JSON.parse(c.items_json || '[]').forEach((it) => {
+        if (it.type === 'casquette') casq += (it.qte || 0);
+        else tOnline += (it.qte || 0);
+      });
+    } catch (e) {}
+  });
+  const attente = CMDS.filter((c) => c.statut === 'en_attente').length;
+  const tTotal = tOnline + SALLE_COUNT; // en ligne + participations en salle
+
+  $('k-ca').textContent = eurC(ca);
+  $('k-tshirts').textContent = tTotal;
+  $('k-casq').textContent = casq;
+  $('k-attente').textContent = attente;
+
+  const target = Math.max(1, parseInt($('pm-target').value, 10) || 166);
+  const pct = Math.min(100, Math.round((tTotal / target) * 1000) / 10);
+  const bar = $('pm-bar');
+  bar.style.width = pct + '%';
+  bar.textContent = pct >= 8 ? pct + ' %' : '';
+  const reste = Math.max(0, target - tTotal);
+  if (tTotal >= target) {
+    $('pm-label').innerHTML = '🎉 <b style="color:#22e0e0">Point mort atteint !</b> ' + tTotal + ' t-shirts vendus. Chaque vente supplémentaire est désormais du bénéfice.';
+  } else {
+    $('pm-label').innerHTML = '<b>' + tTotal + '</b> / ' + target + ' t-shirts &nbsp;·&nbsp; encore <b style="color:#ff2e88">' + reste + '</b> pour rentabiliser (dont ' + tOnline + ' en ligne + ' + SALLE_COUNT + ' en salle).';
+  }
 }
 
 function renderCommandes(list) {
@@ -148,6 +189,13 @@ document.addEventListener('DOMContentLoaded', () => {
       } else { al.className = 'alert show err'; al.textContent = d.error || 'Erreur.'; }
     } catch (e) { al.className = 'alert show err'; al.textContent = 'Erreur réseau.'; }
     finally { $('gen-btn').disabled = false; $('gen-btn').textContent = 'Générer'; }
+  });
+
+  const savedTarget = sessionStorage.getItem('pm_target');
+  if (savedTarget) $('pm-target').value = savedTarget;
+  $('pm-target').addEventListener('input', () => {
+    sessionStorage.setItem('pm_target', $('pm-target').value);
+    renderKPIs();
   });
 
   $('search').addEventListener('input', (e) => {
