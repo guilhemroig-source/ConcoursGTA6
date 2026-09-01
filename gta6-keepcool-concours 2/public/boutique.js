@@ -1,6 +1,6 @@
 'use strict';
 
-let CFG = { prixTshirtCents: 2500, fraisEnvoiCents: 350, tailles: ['S', 'M', 'L', 'XL', 'XXL'], paiementDemo: false };
+let CFG = { prixTshirtCents: 2500, prixCasquetteCents: 1500, fraisEnvoiCents: 350, tailles: ['S', 'M', 'L', 'XL', 'XXL'], paiementDemo: false };
 const $ = (id) => document.getElementById(id);
 const eur = (c) => (c / 100).toFixed(2).replace('.', ',') + ' €';
 
@@ -11,18 +11,19 @@ async function loadCfg() {
   } catch (e) {}
   $('price-tag').textContent = eur(CFG.prixTshirtCents);
   $('frais-label').textContent = '+' + eur(CFG.fraisEnvoiCents);
+  const pc = $('prix-casq'); if (pc) pc.textContent = eur(CFG.prixCasquetteCents);
   if (CFG.paiementDemo) $('demo-note').classList.remove('hidden');
 
   $('sizes').innerHTML = CFG.tailles
-    .map(
-      (t) => `<div class="size-row">
-        <div class="sz">${t}</div>
-        <div class="stepper">
-          <button type="button" data-t="${t}" data-d="-1">−</button>
-          <input type="text" inputmode="numeric" id="q-${t}" value="0" data-t="${t}" />
-          <button type="button" data-t="${t}" data-d="1">+</button>
-        </div>
-      </div>`
+    .map((t) =>
+      '<div class="size-row">' +
+        '<div class="sz">' + t + '</div>' +
+        '<div class="stepper">' +
+          '<button type="button" data-t="' + t + '" data-d="-1">−</button>' +
+          '<input type="text" inputmode="numeric" id="q-' + t + '" value="0" data-t="' + t + '" />' +
+          '<button type="button" data-t="' + t + '" data-d="1">+</button>' +
+        '</div>' +
+      '</div>'
     )
     .join('');
 
@@ -33,7 +34,18 @@ async function loadCfg() {
     recompute();
   });
   $('sizes').addEventListener('input', recompute);
+
+  const step = (d) => { const i = $('q-casquette'); i.value = Math.max(0, Math.min(20, (parseInt(i.value, 10) || 0) + d)); recompute(); };
+  $('casq-minus').addEventListener('click', () => step(-1));
+  $('casq-plus').addEventListener('click', () => step(1));
+  $('q-casquette').addEventListener('input', recompute);
+
   recompute();
+}
+
+function casqQty() {
+  const el = $('q-casquette');
+  return Math.max(0, Math.min(20, parseInt(el && el.value, 10) || 0));
 }
 
 function getItems() {
@@ -46,10 +58,11 @@ function livrMode() {
 
 function recompute() {
   const items = getItems();
-  const qte = items.reduce((s, i) => s + i.qte, 0);
-  const articles = qte * CFG.prixTshirtCents;
+  const qteT = items.reduce((s, i) => s + i.qte, 0);
+  const casq = casqQty();
+  const articles = qteT * CFG.prixTshirtCents + casq * CFG.prixCasquetteCents;
   const frais = livrMode() === 'domicile' ? CFG.fraisEnvoiCents : 0;
-  $('rl-articles').textContent = `Articles (${qte})`;
+  $('rl-articles').textContent = 'Articles (' + (qteT + casq) + ')';
   $('v-articles').textContent = eur(articles);
   $('v-frais').textContent = frais ? eur(frais) : 'Gratuit';
   $('v-total').textContent = eur(articles + frais);
@@ -74,11 +87,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $('pay-btn').addEventListener('click', async () => {
     const items = getItems();
-    if (!items.length) return alertMsg('err', 'Sélectionne au moins un t-shirt.');
-    if (!$('cgv').checked) return alertMsg('err', 'Merci d\'accepter le règlement.');
+    const casquettes = casqQty();
+    if (!items.length) return alertMsg('err', 'Sélectionne au moins un t-shirt (obligatoire pour participer). La casquette est un bonus +1 chance.');
+    if (!$('cgv').checked) return alertMsg('err', "Merci d'accepter le règlement.");
 
     const payload = {
       items,
+      casquettes,
       prenom: $('prenom').value.trim(),
       nom: $('nom').value.trim(),
       email: $('email').value.trim(),
