@@ -244,6 +244,16 @@ app.post('/api/admin/commande/:id/statut', requireAdmin, (req, res) => {
   }
 });
 
+// Supprimer definitivement une commande (+ ses participations et codes).
+app.post('/api/admin/commande/:id/supprimer', requireAdmin, (req, res) => {
+  try {
+    const r = orders.deleteOrder(parseInt(req.params.id, 10));
+    res.json({ ok: true, numero: r.numero });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, error: e.message });
+  }
+});
+
 // Supprimer un participant (corriger une saisie).
 app.post('/api/admin/participant/:id/supprimer', requireAdmin, (req, res) => {
   try {
