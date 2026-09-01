@@ -37,6 +37,7 @@ module.exports = {
 
   // Boutique en ligne ------------------------------------------------------
   prixTshirtCents: parseInt(process.env.PRIX_TSHIRT_CENTS || '2500', 10), // 25,00 €
+  prixCasquetteCents: parseInt(process.env.PRIX_CASQUETTE_CENTS || '1500', 10), // 15,00 €
   fraisEnvoiCents: parseInt(process.env.FRAIS_ENVOI_CENTS || '350', 10),  // 3,50 €
   tailles: (process.env.TAILLES || 'S,M,L,XL,XXL').split(','),
   devise: 'EUR',
