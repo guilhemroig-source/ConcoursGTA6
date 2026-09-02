@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const db = require('./lib/db');
 const config = require('./lib/config');
@@ -9,8 +10,44 @@ const orders = require('./lib/orders');
 const mollie = require('./lib/mollie');
 
 const app = express();
+app.set('trust proxy', true);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ------------------------------------------------------------ statistiques de visite
+// Comptage anonyme des pages vues du site public. On n'enregistre jamais l'IP en clair :
+// chaque visiteur est identifie par un hash (ip + navigateur + jour + sel), non reversible.
+const VISIT_SALT = 'kc-gta6-visites-v1';
+const insertVisite = db.prepare('INSERT INTO visites (jour, path, referer, visitor) VALUES (?, ?, ?, ?)');
+function visitorHash(req, jour) {
+  const ip = (req.get('x-forwarded-for') || req.ip || '').split(',')[0].trim();
+  const ua = req.get('user-agent') || '';
+  return crypto.createHash('sha256').update(ip + '|' + ua + '|' + jour + '|' + VISIT_SALT).digest('hex').slice(0, 20);
+}
+app.use((req, res, next) => {
+  try {
+    if (req.method === 'GET') {
+      let p = req.path || '/';
+      const isAsset = /\.(css|js|png|jpe?g|gif|svg|ico|webp|woff2?|ttf|map|json|txt|xml|mp4|webm|avif)$/i.test(p);
+      const isApi = p.indexOf('/api/') === 0;
+      const isAdmin = p === '/admin.html' || p === '/tirage.html' || p === '/verificateur.html';
+      if (!isAsset && !isApi && !isAdmin) {
+        if (p === '/') p = '/index.html';
+        const jour = new Date().toISOString().slice(0, 10);
+        let ref = '';
+        try {
+          const rr = req.get('referer');
+          if (rr) {
+            const host = new URL(rr).hostname;
+            if (host && !/(^|\.)concours-gta6\.com$/i.test(host)) ref = host;
+          }
+        } catch (e) { /* referer invalide : ignore */ }
+        insertVisite.run(jour, p.slice(0, 200), ref.slice(0, 120), visitorHash(req, jour));
+      }
+    }
+  } catch (e) { /* le tracking ne doit jamais casser une page */ }
+  next();
+});
 
 // ------------------------------------------------------------------ helpers
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -207,6 +244,33 @@ app.get('/api/admin/participants', requireAdmin, (req, res) => {
 
 app.get('/api/admin/commandes', requireAdmin, (req, res) => {
   res.json({ ok: true, commandes: orders.listCommandes() });
+});
+
+// Statistiques de visite du site (pages vues, visiteurs uniques, sources, tendance).
+const vq = {
+  total: db.prepare('SELECT COUNT(*) AS n FROM visites'),
+  uniques: db.prepare('SELECT COUNT(DISTINCT visitor) AS n FROM visites'),
+  jour: db.prepare('SELECT COUNT(*) AS vues, COUNT(DISTINCT visitor) AS uniques FROM visites WHERE jour = ?'),
+  uniquesDepuis: db.prepare('SELECT COUNT(DISTINCT visitor) AS n FROM visites WHERE jour >= ?'),
+  vuesDepuis: db.prepare('SELECT COUNT(*) AS n FROM visites WHERE jour >= ?'),
+  parJour: db.prepare('SELECT jour, COUNT(*) AS vues, COUNT(DISTINCT visitor) AS uniques FROM visites GROUP BY jour ORDER BY jour DESC LIMIT 30'),
+  topPages: db.prepare('SELECT path, COUNT(*) AS n FROM visites GROUP BY path ORDER BY n DESC LIMIT 8'),
+  topRef: db.prepare("SELECT referer, COUNT(*) AS n FROM visites WHERE referer IS NOT NULL AND referer <> '' GROUP BY referer ORDER BY n DESC LIMIT 8"),
+};
+app.get('/api/admin/visites', requireAdmin, (req, res) => {
+  const jour = new Date().toISOString().slice(0, 10);
+  const d7 = new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10);
+  res.json({
+    ok: true,
+    total: vq.total.get().n,
+    uniques: vq.uniques.get().n,
+    aujourdhui: vq.jour.get(jour),
+    uniques7: vq.uniquesDepuis.get(d7).n,
+    vues7: vq.vuesDepuis.get(d7).n,
+    parJour: vq.parJour.all(),
+    topPages: vq.topPages.all(),
+    topRef: vq.topRef.all(),
+  });
 });
 
 // Recuperer manuellement une commande DEJA PAYEE (ex : paiement Mollie encaisse mais
