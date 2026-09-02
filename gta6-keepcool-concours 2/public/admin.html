@@ -65,6 +65,33 @@
       <p class="hint" id="pm-label" style="margin-top:10px">—</p>
     </div>
 
+    <!-- Statistiques de visite -->
+    <div class="section-head" style="text-align:left;margin:8px 0 14px">
+      <h3 style="margin:0">📈 Fréquentation du site</h3>
+      <p class="hint" style="margin:4px 0 0">Comptage anonyme, sans cookie (RGPD). Démarré à la mise en ligne de cette fonctionnalité — l'historique antérieur n'existe pas.</p>
+    </div>
+    <div class="cards" style="margin-bottom:16px">
+      <div class="card prize"><div class="count" style="color:var(--cyan)" id="v-vues">0</div><h3>Pages vues</h3><p>Total depuis le lancement</p></div>
+      <div class="card prize"><div class="count pink" id="v-uniques">0</div><h3>Visiteurs uniques</h3><p>Personnes distinctes</p></div>
+      <div class="card prize"><div class="count" style="color:var(--yellow)" id="v-today">0</div><h3>Visiteurs aujourd'hui</h3><p><span id="v-today-vues">0</span> pages vues</p></div>
+      <div class="card prize"><div class="count" style="color:var(--orange)" id="v-conv">—</div><h3>Taux de conversion</h3><p>Visiteurs → acheteurs</p></div>
+    </div>
+
+    <div class="grid-2" style="align-items:start;margin-bottom:28px">
+      <div class="card">
+        <h3 style="margin:0 0 12px">Visites des 14 derniers jours</h3>
+        <div id="v-chart" style="display:flex;align-items:flex-end;gap:6px;height:160px">
+          <p class="hint">Aucune visite enregistrée pour l'instant.</p>
+        </div>
+        <p class="hint" id="v-chart-label" style="margin-top:10px">—</p>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 12px">Pages populaires & sources</h3>
+        <div style="font-size:.9rem"><b>Top pages</b><div id="v-pages" class="hint" style="margin:6px 0 16px">—</div></div>
+        <div style="font-size:.9rem"><b>Sources de trafic</b><div id="v-ref" class="hint" style="margin-top:6px">—</div></div>
+      </div>
+    </div>
+
     <!-- Stats participations -->
     <div class="cards" style="margin-bottom:28px">
       <div class="card prize"><div class="count pink" id="s-total">0</div><h3>Participants</h3><p>Total des inscriptions valides</p></div>
