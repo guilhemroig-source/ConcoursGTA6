@@ -63,6 +63,60 @@ async function refresh() {
   } catch (e) { CMDS = []; }
 
   renderKPIs();
+  loadVisites();
+}
+
+// Statistiques de frequentation du site (pages vues, visiteurs, sources, tendance).
+async function loadVisites() {
+  let v;
+  try { v = await (await api('/api/admin/visites')).json(); } catch (e) { return; }
+  if (!v || !v.ok) return;
+  $('v-vues').textContent = v.total;
+  $('v-uniques').textContent = v.uniques;
+  $('v-today').textContent = (v.aujourdhui && v.aujourdhui.uniques) || 0;
+  $('v-today-vues').textContent = (v.aujourdhui && v.aujourdhui.vues) || 0;
+
+  const paidCount = CMDS.filter((c) => c.statut === 'payee').length;
+  if (v.uniques > 0) {
+    const conv = Math.min(100, Math.round((paidCount / v.uniques) * 1000) / 10);
+    $('v-conv').textContent = conv + ' %';
+  } else {
+    $('v-conv').textContent = '—';
+  }
+
+  renderVisitChart(v.parJour || []);
+  renderVisitLists(v.topPages || [], v.topRef || []);
+}
+
+function renderVisitChart(parJour) {
+  const map = {};
+  parJour.forEach((r) => { map[r.jour] = r; });
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    const row = map[d] || {};
+    days.push({ jour: d, vues: row.vues || 0, uniques: row.uniques || 0 });
+  }
+  const max = Math.max(1, ...days.map((d) => d.vues));
+  $('v-chart').innerHTML = days.map((d) => {
+    const h = Math.round((d.vues / max) * 100);
+    const jj = d.jour.slice(8, 10) + '/' + d.jour.slice(5, 7);
+    return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end" title="' + d.jour + ' : ' + d.vues + ' pages vues, ' + d.uniques + ' visiteurs">'
+      + '<div style="font-size:.7rem;color:var(--text)">' + (d.vues || '') + '</div>'
+      + '<div style="width:100%;height:' + h + '%;min-height:' + (d.vues ? 4 : 1) + 'px;background:linear-gradient(180deg,#22e0e0,#ff2e88);border-radius:5px 5px 0 0"></div>'
+      + '<div style="font-size:.62rem;color:#8a8fa3">' + jj + '</div></div>';
+  }).join('');
+  const total14 = days.reduce((s, d) => s + d.vues, 0);
+  $('v-chart-label').textContent = total14 + ' pages vues sur les 14 derniers jours.';
+}
+
+function renderVisitLists(pages, refs) {
+  $('v-pages').innerHTML = pages.length
+    ? pages.map((p) => escapeHtml(p.path) + ' — <b>' + p.n + '</b>').join('<br>')
+    : 'Aucune donnée pour l\'instant.';
+  $('v-ref').innerHTML = refs.length
+    ? refs.map((r) => escapeHtml(r.referer) + ' — <b>' + r.n + '</b>').join('<br>')
+    : 'Accès directs uniquement pour l\'instant (aucune source externe détectée).';
 }
 
 // Calcule le chiffre d'affaires, les ventes et la progression vers le point mort.
