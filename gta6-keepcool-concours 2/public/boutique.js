@@ -181,3 +181,61 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (e) {}
   setTimeout(trigger, 40000);
 })();
+
+/* --------- Conversion boutique : retrait par defaut + urgence/preuve sociale --------- */
+(function () {
+  // 1) Retrait en salle par defaut : supprime les champs d'adresse (moins de friction)
+  function initRetrait() {
+    var rr = document.querySelector('input[name="livr"][value="retrait"]');
+    if (rr) { rr.checked = true; try { setLivr(); } catch (e) {} }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initRetrait);
+  else initRetrait();
+
+  // 2) Bandeau urgence + preuve sociale, injecte en haut de la boutique
+  function parseDate(s) {
+    if (!s) return null;
+    var m = String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1], 23, 59, 59);
+    var d = new Date(s); return isNaN(d.getTime()) ? null : d;
+  }
+  function deadlineText(dt) {
+    if (!dt) return '';
+    var ms = dt.getTime() - Date.now();
+    if (ms <= 0) return '';
+    var j = Math.floor(ms / 86400000), h = Math.floor((ms % 86400000) / 3600000);
+    if (j > 0) return 'Fin dans ' + j + 'j ' + h + 'h';
+    var mn = Math.floor((ms % 3600000) / 60000);
+    return 'Fin dans ' + h + 'h ' + mn + 'min';
+  }
+  function inject(count, dl) {
+    if (document.getElementById('kc-urgency')) return;
+    var css = document.createElement('style');
+    css.textContent =
+      '#kc-urgency{margin:0 0 16px;padding:12px 16px;border-radius:12px;background:linear-gradient(90deg,rgba(34,224,224,.12),rgba(255,46,136,.14));border:1px solid rgba(255,46,136,.35);color:#eef0ff;font-size:.92rem;font-weight:600;line-height:1.4;text-align:center}' +
+      '#kc-urgency .u{color:#ff2e88;font-weight:800}' +
+      '#kc-urgency b{color:#22e0e0}';
+    document.head.appendChild(css);
+    var parts = [];
+    if (count >= 25) parts.push('<span class="u">🔥 Déjà ' + count + ' participants</span>');
+    else parts.push('<span class="u">🎯 Sois parmi les premiers à tenter ta chance</span>');
+    if (dl) parts.push('<span class="u">⏳ ' + dl + '</span>');
+    parts.push('1 T-shirt = <b>1 chance</b> de gagner une <b>PS5 + GTA VI</b>');
+    var div = document.createElement('div');
+    div.id = 'kc-urgency';
+    div.innerHTML = parts.join(' · ');
+    var sizes = document.getElementById('sizes');
+    var anchor = sizes ? (sizes.closest('fieldset') || sizes) : null;
+    if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(div, anchor);
+    else document.body.insertBefore(div, document.body.firstChild);
+  }
+  Promise.all([
+    fetch('/api/public/stats').then(function (r) { return r.json(); }).catch(function () { return { participants: 0 }; }),
+    fetch('/api/config').then(function (r) { return r.json(); }).catch(function () { return {}; })
+  ]).then(function (res) {
+    var count = (res[0] && res[0].participants) || 0;
+    var dl = deadlineText(parseDate((res[1] && (res[1].dateFin || res[1].dateTirage)) || ''));
+    function go() { inject(count, dl); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+  });
+})();
