@@ -239,3 +239,37 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
   });
 })();
+
+/* --------- Upsell : compteur de chances en direct (pousse a acheter plus) --------- */
+(function () {
+  function chancesNow() {
+    var tailles = (typeof CFG !== 'undefined' && CFG.tailles) ? CFG.tailles : ['S', 'M', 'L', 'XL', 'XXL'];
+    var n = 0;
+    tailles.forEach(function (t) { var el = document.getElementById('q-' + t); if (el) n += parseInt(el.value, 10) || 0; });
+    var cq = document.getElementById('q-casquette'); if (cq) n += parseInt(cq.value, 10) || 0;
+    return n;
+  }
+  function render() {
+    var el = document.getElementById('kc-chances'); if (!el) return;
+    var n = chancesNow();
+    el.innerHTML = n > 0
+      ? ('🎯 <b>' + n + ' chance' + (n > 1 ? 's' : '') + '</b> au tirage — plus tu en prends, plus tu as de chances de gagner&nbsp;!')
+      : '💡 Astuce : chaque T-shirt = <b>1 chance</b>, chaque casquette = <b>+1 chance</b>. Multiplie tes chances&nbsp;!';
+  }
+  function init() {
+    if (!document.getElementById('kc-chances')) {
+      var anchor = document.querySelector('.summary-total') || document.getElementById('pay-btn');
+      if (anchor && anchor.parentNode) {
+        var css = document.createElement('style');
+        css.textContent = '#kc-chances{margin:12px 0 4px;padding:11px 14px;border-radius:10px;background:rgba(34,224,224,.10);border:1px solid rgba(34,224,224,.35);color:#e3e6ff;font-size:.92rem;font-weight:600;text-align:center;line-height:1.4}#kc-chances b{color:#22e0e0}';
+        document.head.appendChild(css);
+        var d = document.createElement('div'); d.id = 'kc-chances';
+        anchor.parentNode.insertBefore(d, anchor);
+      }
+    }
+    render();
+    document.addEventListener('input', render, true);
+    document.addEventListener('click', function () { setTimeout(render, 0); }, true);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
