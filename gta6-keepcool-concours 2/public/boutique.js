@@ -117,3 +117,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+/* --------- Pop-up de sortie boutique (retenir + finaliser la commande) --------- */
+(function () {
+  var KEY = 'kc_exit_popup_v1';
+  function shown() { try { return sessionStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
+  function mark() { try { sessionStorage.setItem(KEY, '1'); } catch (e) {} }
+
+  function build() {
+    if (document.getElementById('kc-exit')) return;
+    var css = document.createElement('style');
+    css.textContent =
+      '#kc-exit{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(6,6,14,.82);backdrop-filter:blur(4px);opacity:0;transition:opacity .25s ease}' +
+      '#kc-exit.on{opacity:1}' +
+      '#kc-exit .box{position:relative;max-width:440px;width:100%;background:linear-gradient(160deg,#171332,#241243);border:1px solid rgba(255,46,136,.55);border-radius:20px;padding:32px 26px 24px;box-shadow:0 24px 70px rgba(0,0,0,.6),0 0 40px rgba(255,46,136,.22);text-align:center;transform:translateY(14px) scale(.98);transition:transform .25s ease}' +
+      '#kc-exit.on .box{transform:none}' +
+      '#kc-exit .x{position:absolute;top:10px;right:14px;background:none;border:none;color:#9a9ab5;font-size:26px;line-height:1;cursor:pointer}' +
+      '#kc-exit h2{margin:6px 0 8px;font-size:1.5rem;color:#fff;font-weight:800;line-height:1.25}' +
+      '#kc-exit h2 span{color:#22e0e0}' +
+      '#kc-exit p{margin:0 0 18px;color:#cfd0e6;font-size:1rem;line-height:1.5}' +
+      '#kc-exit p b{color:#ff2e88}' +
+      '#kc-exit .cta{display:block;width:100%;padding:15px 18px;border:none;border-radius:12px;font-size:1.08rem;font-weight:800;color:#0a0a14;cursor:pointer;text-decoration:none;background:linear-gradient(90deg,#22e0e0,#ff2e88);box-shadow:0 10px 26px rgba(255,46,136,.35)}' +
+      '#kc-exit .cta:hover{filter:brightness(1.06)}' +
+      '#kc-exit .no{display:inline-block;margin-top:12px;background:none;border:none;color:#8a8fa3;font-size:.85rem;cursor:pointer;text-decoration:underline}';
+    document.head.appendChild(css);
+
+    var wrap = document.createElement('div');
+    wrap.id = 'kc-exit';
+    wrap.innerHTML =
+      '<div class="box" role="dialog" aria-modal="true">' +
+        '<button class="x" aria-label="Fermer">&times;</button>' +
+        '<div style="font-size:2.2rem">🔥</div>' +
+        '<h2>Si près de gagner une <span>PS5</span>&nbsp;!</h2>' +
+        '<p>Ta participation au tirage <b>PS5 + GTA VI</b> est à quelques clics.<br>1 T-shirt = <b>1 chance</b> de gagner. Ne la laisse pas passer&nbsp;!</p>' +
+        '<button class="cta" type="button">Finaliser ma commande →</button>' +
+        '<button class="no" type="button">Non merci, une autre fois</button>' +
+      '</div>';
+    document.body.appendChild(wrap);
+
+    function close() { wrap.classList.remove('on'); setTimeout(function () { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); }, 260); }
+    function goForm() {
+      close();
+      var t = document.getElementById('pay-btn') || document.getElementById('sizes');
+      if (t) { try { t.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { t.scrollIntoView(); } }
+    }
+    wrap.querySelector('.x').addEventListener('click', close);
+    wrap.querySelector('.no').addEventListener('click', close);
+    wrap.querySelector('.cta').addEventListener('click', goForm);
+    wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
+    requestAnimationFrame(function () { wrap.classList.add('on'); });
+  }
+
+  function trigger() { if (shown()) return; mark(); build(); }
+
+  document.addEventListener('mouseout', function (e) {
+    if (!e.relatedTarget && e.clientY <= 0) trigger();
+  });
+  try {
+    history.pushState(null, '', location.href);
+    window.addEventListener('popstate', function () {
+      if (!shown()) { history.pushState(null, '', location.href); trigger(); }
+    });
+  } catch (e) {}
+  setTimeout(trigger, 40000);
+})();
