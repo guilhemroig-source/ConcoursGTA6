@@ -21,7 +21,7 @@ module.exports = {
 
   // Dates (format libre pour affichage) ------------------------------------
   dateDebut: process.env.DATE_DEBUT || '[JJ/MM/AAAA]',
-  dateFin: process.env.DATE_FIN || '[JJ/MM/AAAA]',
+  dateFin: process.env.DATE_FIN || '30/09/2026',
   dateTirage: process.env.DATE_TIRAGE || '[JJ/MM/AAAA]',
 
   // Dotations --------------------------------------------------------------
