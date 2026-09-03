@@ -137,3 +137,56 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (e) {}
   setTimeout(trigger, 35000);
 })();
+
+/* --------- Barre CTA fixe : valeur + preuve sociale + urgence + reassurance --------- */
+(function () {
+  function parseDate(s) {
+    if (!s) return null;
+    var m = String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1], 23, 59, 59);
+    var d = new Date(s); return isNaN(d.getTime()) ? null : d;
+  }
+  function deadlineText(dt) {
+    if (!dt) return '';
+    var ms = dt.getTime() - Date.now();
+    if (ms <= 0) return '';
+    var j = Math.floor(ms / 86400000), h = Math.floor((ms % 86400000) / 3600000);
+    if (j > 0) return 'Fin dans ' + j + 'j ' + h + 'h';
+    var mn = Math.floor((ms % 3600000) / 60000);
+    return 'Fin dans ' + h + 'h ' + mn + 'min';
+  }
+  function build(count, dl) {
+    if (document.getElementById('kc-bar')) return;
+    var css = document.createElement('style');
+    css.textContent =
+      'body{padding-bottom:88px}' +
+      '#kc-bar{position:fixed;left:0;right:0;bottom:0;z-index:9998;background:linear-gradient(90deg,#171332,#241243);border-top:1px solid rgba(34,224,224,.4);box-shadow:0 -8px 30px rgba(0,0,0,.55);padding:10px 16px;display:flex;align-items:center;gap:14px;justify-content:center}' +
+      '#kc-bar .txt{color:#e9eaf7;font-size:.92rem;font-weight:600;line-height:1.3}' +
+      '#kc-bar .txt b{color:#22e0e0}' +
+      '#kc-bar .txt .u{color:#ff2e88;font-weight:800}' +
+      '#kc-bar .txt .tr{display:block;color:#9094ad;font-size:.72rem;font-weight:500;margin-top:2px}' +
+      '#kc-bar a.cta{white-space:nowrap;padding:12px 22px;border-radius:11px;font-weight:800;font-size:1rem;color:#0a0a14;text-decoration:none;background:linear-gradient(90deg,#22e0e0,#ff2e88);box-shadow:0 8px 20px rgba(255,46,136,.35)}' +
+      '#kc-bar a.cta:hover{filter:brightness(1.06)}' +
+      '@media(max-width:600px){#kc-bar{gap:9px;padding:9px 12px}#kc-bar .txt{font-size:.8rem;flex:1}#kc-bar a.cta{padding:11px 15px;font-size:.9rem}}';
+    document.head.appendChild(css);
+    var pre = '';
+    if (count >= 25) pre += '<span class="u">🔥 Déjà ' + count + ' participants</span> · ';
+    if (dl) pre += '<span class="u">⏳ ' + dl + '</span> · ';
+    var bar = document.createElement('div');
+    bar.id = 'kc-bar';
+    bar.innerHTML =
+      '<div class="txt">' + pre + '<b>25€</b> = 1 T-shirt collector <b>+ 1 chance</b> de gagner une PS5 + GTA VI' +
+      '<span class="tr">🔒 Paiement sécurisé · 🎲 Tirage transparent</span></div>' +
+      '<a class="cta" href="boutique.html">Je participe →</a>';
+    document.body.appendChild(bar);
+  }
+  Promise.all([
+    fetch('/api/public/stats').then(function (r) { return r.json(); }).catch(function () { return { participants: 0 }; }),
+    fetch('/api/config').then(function (r) { return r.json(); }).catch(function () { return {}; })
+  ]).then(function (res) {
+    var count = (res[0] && res[0].participants) || 0;
+    var dl = deadlineText(parseDate((res[1] && (res[1].dateFin || res[1].dateTirage)) || ''));
+    function go() { build(count, dl); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+  });
+})();
