@@ -87,6 +87,11 @@ if (!cmdCols.includes('statut_livraison')) {
   db.exec("ALTER TABLE commandes ADD COLUMN statut_livraison TEXT NOT NULL DEFAULT 'en_attente_distribution'");
 }
 
+// Migration douce : suivi de la relance des paniers abandonnes (0 = pas encore relance).
+if (!cmdCols.includes('relance_envoyee')) {
+  db.exec("ALTER TABLE commandes ADD COLUMN relance_envoyee INTEGER NOT NULL DEFAULT 0");
+}
+
 // Statistiques de visite (comptage anonyme, RGPD-friendly : pas d'IP en clair,
 // on stocke un identifiant hache par visiteur/jour).
 db.exec(`
