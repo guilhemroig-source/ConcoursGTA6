@@ -125,6 +125,14 @@ app.get('/api/config', (req, res) => {
   });
 });
 
+// Statistiques publiques (preuve sociale) : nombre de participants au tirage.
+const publicParticipantCount = db.prepare('SELECT COUNT(*) AS n FROM participants');
+app.get('/api/public/stats', (req, res) => {
+  let n = 0;
+  try { n = publicParticipantCount.get().n; } catch (e) {}
+  res.json({ participants: n });
+});
+
 // ----------------------------------------------------------- boutique / paiement
 
 // Creer une commande + demarrer le paiement Mollie
