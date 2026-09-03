@@ -2,6 +2,7 @@
 
 const path = require('path');
 const crypto = require('crypto');
+const https = require('https');
 const express = require('express');
 const db = require('./lib/db');
 const config = require('./lib/config');
@@ -453,6 +454,62 @@ app.get('/api/admin/tirage/:id', requireAdmin, (req, res) => {
 
 // ------------------------------------------------------------- static files
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ------------------------------------------------------------ relance paniers abandonnes
+// Un visiteur qui a saisi son email et lance le paiement mais n'a pas paye recoit,
+// entre 45 min et 24 h apres, un e-mail de rappel pour finaliser sa participation.
+function relanceApiKey() {
+  const p = config.smtp && config.smtp.pass;
+  return process.env.BREVO_API_KEY || (p && /^xkeysib-/i.test(p) ? p : '');
+}
+function relanceFrom() {
+  const from = config.mailFrom || 'Keep Cool Narbonne <narbonne@keepcool.fr>';
+  const m = String(from).match(/^\s*(.*?)\s*<\s*(.+?)\s*>\s*$/);
+  return m ? { name: m[1] || 'Keep Cool Narbonne', email: m[2] } : { name: 'Keep Cool Narbonne', email: String(from).trim() };
+}
+function sendRelanceEmail(to, prenom) {
+  return new Promise((resolve) => {
+    const key = relanceApiKey();
+    if (!key || !to) return resolve(false);
+    const f = relanceFrom();
+    const p = prenom ? (String(prenom).trim() + ', ') : '';
+    const html =
+      '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0f0d1e;color:#eef0ff;padding:28px;border-radius:14px">' +
+      '<h1 style="color:#22e0e0;font-size:22px;margin:0 0 10px">🎮 Ta participation t\'attend !</h1>' +
+      '<p style="font-size:15px;line-height:1.5;color:#cfd0e6">' + p + 'tu étais à deux doigts de tenter ta chance de gagner une <b style="color:#ff2e88">PlayStation 5 + GTA VI</b> avec Keep Cool Narbonne.</p>' +
+      '<p style="font-size:15px;line-height:1.5;color:#cfd0e6">Ton T-shirt collector à 25€ = <b>1 chance</b> au tirage. Il te reste juste à finaliser :</p>' +
+      '<p style="text-align:center;margin:22px 0"><a href="https://www.concours-gta6.com/boutique.html" style="display:inline-block;background:#ff2e88;color:#0a0a14;font-weight:bold;text-decoration:none;padding:14px 26px;border-radius:10px;font-size:16px">Finaliser ma participation →</a></p>' +
+      '<p style="font-size:12px;color:#8a8fa3">Tirage transparent · Fin des participations le 30/09. À très vite en salle !</p>' +
+      '</div>';
+    const payload = JSON.stringify({
+      sender: f,
+      to: [{ email: to }],
+      subject: '🎮 Ta chance de gagner une PS5 + GTA VI t\'attend !',
+      htmlContent: html,
+    });
+    const req = https.request({
+      hostname: 'api.brevo.com', path: '/v3/smtp/email', method: 'POST',
+      headers: { 'api-key': key, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
+    }, (r) => { r.on('data', () => {}); r.on('end', () => resolve(r.statusCode >= 200 && r.statusCode < 300)); });
+    req.on('error', () => resolve(false));
+    req.write(payload); req.end();
+  });
+}
+const abandonedStmt = db.prepare(
+  "SELECT id, prenom, email FROM commandes WHERE statut='en_attente' AND email IS NOT NULL AND email <> '' " +
+  "AND relance_envoyee=0 AND cree_le <= datetime('now','-45 minutes') AND cree_le >= datetime('now','-1 day')"
+);
+const markRelance = db.prepare('UPDATE commandes SET relance_envoyee=1 WHERE id=?');
+async function relanceAbandoned() {
+  try {
+    const rows = abandonedStmt.all();
+    for (const c of rows) {
+      markRelance.run(c.id); // marque avant envoi pour eviter tout doublon
+      try { await sendRelanceEmail(c.email, c.prenom); } catch (e) {}
+    }
+  } catch (e) { console.error('relance paniers:', e.message); }
+}
+setInterval(relanceAbandoned, 15 * 60 * 1000);
 
 app.listen(config.port, () => {
   console.log(`\n  🎮  Site jeu-concours GTA VI x Keep Cool`);
