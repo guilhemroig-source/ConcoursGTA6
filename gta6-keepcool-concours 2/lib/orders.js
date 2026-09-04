@@ -34,7 +34,7 @@ const stmt = {
   insertCode: db.prepare("INSERT INTO codes (code, statut, participant_id) VALUES (?, 'utilise', NULL)"),
   insertParticipant: db.prepare("INSERT INTO participants (code, prenom, nom, email, telephone, source, reglement_ok, rgpd_ok, majeur_ok, ip, commande_id) VALUES (?, ?, ?, ?, ?, 'boutique', 1, 1, 1, 'boutique', ?)"),
   linkCode: db.prepare('UPDATE codes SET participant_id=? WHERE code=?'),
-  listCommandes: db.prepare('SELECT id, numero, prenom, nom, email, telephone, quantite, montant_articles, frais_envoi, montant_total, statut, statut_livraison, livraison_mode, adresse, code_postal, ville, items_json, codes_json, cree_le, paye_le FROM commandes ORDER BY id DESC'),
+  listCommandes: db.prepare('SELECT id, numero, prenom, nom, email, telephone, quantite, montant_articles, frais_envoi, montant_total, statut, statut_livraison, mollie_payment_id, livraison_mode, adresse, code_postal, ville, items_json, codes_json, cree_le, paye_le FROM commandes ORDER BY id DESC'),
   setStatuts: db.prepare('UPDATE commandes SET statut = ?, statut_livraison = ? WHERE id = ?'),
   getParticipant: db.prepare('SELECT * FROM participants WHERE id = ?'),
   delParticipant: db.prepare('DELETE FROM participants WHERE id = ?'),
