@@ -108,6 +108,46 @@ function attachPayment(orderId, paymentId) {
   stmt.setPayment.run(paymentId, orderId);
 }
 
+/**
+ * Commande CASQUETTE SEULE (relance des acheteurs : chaque casquette = +1 chance).
+ * Contrairement a buildOrder, aucun t-shirt n'est requis ici.
+ */
+function buildCasquetteOrder(payload) {
+  const casquettes = Math.max(1, Math.min(20, parseInt(payload.casquettes, 10) || 1));
+  const prenom = String(payload.prenom || '').trim();
+  const nom = String(payload.nom || '').trim();
+  const email = String(payload.email || '').trim().toLowerCase();
+  const telephone = String(payload.telephone || '').trim();
+  const livraison_mode = payload.livraison_mode === 'domicile' ? 'domicile' : 'retrait';
+  if (!prenom || !nom) throw httpErr(400, 'Prenom et nom obligatoires.');
+  if (!/^[^ @]+@[^ @]+[.][^ @]+$/.test(email)) throw httpErr(400, 'Email invalide.');
+  let adresse = '', code_postal = '', ville = '';
+  if (livraison_mode === 'domicile') {
+    adresse = String(payload.adresse || '').trim();
+    code_postal = String(payload.code_postal || '').trim();
+    ville = String(payload.ville || '').trim();
+    if (!adresse || !code_postal || !ville) throw httpErr(400, 'Adresse de livraison incomplete.');
+  }
+  const clean = [{ type: 'casquette', qte: casquettes }];
+  const montant_articles = casquettes * config.prixCasquetteCents;
+  const frais_envoi = livraison_mode === 'domicile' ? config.fraisEnvoiCents : 0;
+  const montant_total = montant_articles + frais_envoi;
+  return {
+    numero: 'TMP-' + block(8),
+    prenom, nom, email, telephone, livraison_mode, adresse, code_postal, ville,
+    items_json: JSON.stringify(clean), quantite: casquettes, montant_articles, frais_envoi, montant_total,
+  };
+}
+
+const createCasquetteOrder = db.transaction((payload) => {
+  const data = buildCasquetteOrder(payload);
+  const info = stmt.insert.run(data);
+  const id = info.lastInsertRowid;
+  const numero = 'CAP-' + new Date().getFullYear() + '-' + String(id).padStart(5, '0');
+  stmt.setNumero.run(numero, id);
+  return stmt.byId.get(id);
+});
+
 /** Finalise une commande payee : attribue les codes + cree les participations. Idempotent. */
 const finalizePaid = db.transaction((cmd) => {
   if (cmd.statut === 'payee') return { alreadyDone: true, codes: JSON.parse(cmd.codes_json || '[]') };
@@ -203,7 +243,7 @@ function updateParticipantEmail(id, email) {
 }
 
 module.exports = {
-  createOrder, attachPayment, markPaidAndNotify, centsToValue,
+  createOrder, createCasquetteOrder, attachPayment, markPaidAndNotify, centsToValue,
   importPaidOrder, updateStatuts, deleteParticipant, updateParticipantEmail, deleteOrder,
   byNumero: (n) => stmt.byNumero.get(n),
   byPayment: (p) => stmt.byPayment.get(p),
