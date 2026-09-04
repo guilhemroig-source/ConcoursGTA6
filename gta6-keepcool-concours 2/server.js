@@ -148,6 +148,18 @@ app.post('/api/commande', async (req, res) => {
   }
 });
 
+// Commande CASQUETTE SEULE (relance acheteurs : +1 chance par casquette, sans t-shirt)
+app.post('/api/casquette', async (req, res) => {
+  try {
+    const cmd = orders.createCasquetteOrder(req.body || {});
+    const pay = await mollie.createPayment(cmd);
+    orders.attachPayment(cmd.id, pay.paymentId);
+    res.json({ ok: true, numero: cmd.numero, montant_total: cmd.montant_total, checkoutUrl: pay.checkoutUrl, demo: pay.demo });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, error: e.message });
+  }
+});
+
 // Webhook Mollie : notifie du changement de statut d'un paiement
 app.post('/api/webhook/mollie', async (req, res) => {
   const paymentId = req.body && req.body.id;
