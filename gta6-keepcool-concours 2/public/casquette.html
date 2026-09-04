@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Double tes chances 🍀 — Casquette collector GTA VI × Keep Cool</title>
+<link rel="icon" type="image/png" href="assets/favicon.png" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  .cap-hero { text-align:center; max-width:640px; margin:0 auto 26px; }
+  .cap-hero .eyebrow { color:var(--cyan); }
+  .cap-hero h1 { font-family:'Anton'; font-size:clamp(2rem,7vw,3rem); line-height:1; margin:8px 0 12px; }
+  .cap-hero h1 .neon { color:var(--pink); }
+  .cap-hero p { color:var(--muted); margin:0; }
+  .cap-grid { display:grid; grid-template-columns: 0.85fr 1.15fr; gap:30px; align-items:start; max-width:920px; margin:0 auto; }
+  .cap-visual { position:sticky; top:84px; border-radius:22px; border:1px solid var(--card-border);
+    background: radial-gradient(70% 60% at 50% 40%, rgba(255,46,136,.28), transparent 70%), #0a0410; padding:20px; text-align:center; }
+  .price-tag { font-family:'Anton'; font-size:2.2rem; color:var(--cyan); margin-top:10px; }
+  .chance-note { margin-top:12px; padding:11px 14px; border-radius:12px; background:rgba(34,224,224,.10);
+    border:1px solid rgba(34,224,224,.35); color:#e3e6ff; font-size:.9rem; font-weight:600; }
+  .size-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--card-border); border-radius:12px; background:rgba(0,0,0,.2); }
+  .size-row .sz { font-family:'Anton'; font-size:1.3rem; }
+  .stepper { display:flex; align-items:center; gap:10px; }
+  .stepper button { width:38px; height:38px; border-radius:9px; border:1px solid var(--card-border); background:var(--card); color:#fff; font-size:1.3rem; cursor:pointer; }
+  .stepper input { width:52px; text-align:center; padding:8px; border-radius:8px; border:1px solid var(--card-border); background:rgba(0,0,0,.3); color:#fff; font-weight:700; font-size:1.1rem; }
+  .radio-card { display:flex; gap:10px; align-items:flex-start; padding:14px; border:1px solid var(--card-border); border-radius:12px; margin-bottom:10px; cursor:pointer; }
+  .radio-card input { margin-top:3px; accent-color:var(--pink); }
+  .radio-card.sel { border-color:var(--pink); background:rgba(255,46,136,.08); }
+  .summary-line { display:flex; justify-content:space-between; padding:6px 0; color:var(--muted); }
+  .summary-total { display:flex; justify-content:space-between; padding:12px 0 0; font-family:'Anton'; font-size:1.5rem; }
+  .summary-total b { color:var(--yellow); }
+  .secure { font-size:.82rem; color:var(--muted); margin-top:10px; text-align:center; }
+  @media(max-width:760px){ .cap-grid{ grid-template-columns:1fr; } .cap-visual{ position:static; } }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><img src="assets/logo-mark.png" alt="" class="brand-logo" /> KEEP<span>COOL</span> × GTA VI</div>
+    <nav class="nav-links">
+      <a href="index.html">Accueil</a>
+      <a href="boutique.html">Boutique</a>
+      <a href="reglement.html">Règlement</a>
+    </nav>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="cap-hero">
+      <span class="eyebrow">Offre réservée aux participants</span>
+      <h1>Ajoute une casquette,<br><span class="neon">double tes chances</span> 🍀</h1>
+      <p>Tu as déjà ton t-shirt et ta place au tirage. Chaque <b>casquette collector</b> ajoutée = <b style="color:var(--cyan)">+1 chance</b> de gagner le pack <b>PlayStation 5 + GTA VI</b>. Rien d'autre à racheter.</p>
+    </div>
+
+    <div class="cap-grid">
+      <!-- Visuel -->
+      <div class="cap-visual">
+        <svg viewBox="0 0 300 230" width="100%" style="max-width:260px" role="img" aria-label="Casquette Trucker noire avec logo Social Sports Club">
+          <defs>
+            <pattern id="mesh" width="7" height="7" patternUnits="userSpaceOnUse">
+              <circle cx="1.5" cy="1.5" r="1" fill="#2b2b2b"/>
+            </pattern>
+          </defs>
+          <ellipse cx="150" cy="192" rx="128" ry="30" fill="#080808"/>
+          <ellipse cx="150" cy="184" rx="128" ry="28" fill="#171717"/>
+          <path d="M40,176 Q40,58 150,50 Q260,58 260,176 Q150,198 40,176 Z" fill="#131313"/>
+          <path d="M52,150 Q46,95 78,66 Q60,120 66,168 Z" fill="url(#mesh)" opacity="0.9"/>
+          <path d="M248,150 Q254,95 222,66 Q240,120 234,168 Z" fill="url(#mesh)" opacity="0.9"/>
+          <path d="M96,172 Q96,82 150,76 Q204,82 204,172 Q150,184 96,172 Z" fill="#1d1d1d"/>
+          <path d="M150,60 L150,176" stroke="#2c2c2c" stroke-width="1.5"/>
+          <circle cx="150" cy="53" r="6" fill="#262626"/>
+          <image href="assets/logo-mark.png" x="103" y="92" width="94" height="74" preserveAspectRatio="xMidYMid meet"/>
+        </svg>
+        <div class="price-tag" id="price-tag">15,00 €</div>
+        <div class="hint">Casquette Trucker noire · logo Social Sports Club</div>
+        <div class="chance-note">🎯 1 casquette = +1 chance · 2 casquettes = +2 chances</div>
+      </div>
+
+      <!-- Formulaire -->
+      <div>
+        <div id="alert" class="alert"></div>
+
+        <div class="card" style="margin-bottom:18px;border-color:var(--pink)">
+          <h3>1. Combien de casquettes ?</h3>
+          <div class="size-row">
+            <div class="sz">🧢 Casquette collector</div>
+            <div class="stepper">
+              <button type="button" id="casq-minus">−</button>
+              <input type="text" inputmode="numeric" id="q-casquette" value="1" />
+              <button type="button" id="casq-plus">+</button>
+            </div>
+          </div>
+          <p class="hint" style="margin-top:10px">Chaque casquette ajoute une chance supplémentaire au tirage (max 20).</p>
+        </div>
+
+        <div class="card" style="margin-bottom:18px">
+          <h3>2. Récupération</h3>
+          <label class="radio-card sel" id="rc-retrait">
+            <input type="radio" name="livr" value="retrait" checked />
+            <div><b>Retrait à la salle</b> — gratuit<br><span class="hint">Keep Cool Narbonne, 44 rue Demoge.</span></div>
+          </label>
+          <label class="radio-card" id="rc-domicile">
+            <input type="radio" name="livr" value="domicile" />
+            <div><b>Livraison à domicile</b> — <span id="frais-label">+3,50 €</span><br><span class="hint">Reçois ta casquette chez toi.</span></div>
+          </label>
+
+          <div id="addr-block" class="hidden">
+            <div class="field"><label>Adresse *</label><input type="text" id="adresse" placeholder="N° et rue" /></div>
+            <div class="row2">
+              <div class="field"><label>Code postal *</label><input type="text" id="cp" placeholder="11100" /></div>
+              <div class="field"><label>Ville *</label><input type="text" id="ville" placeholder="Narbonne" /></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:18px">
+          <h3>3. Tes coordonnées</h3>
+          <div class="row2">
+            <div class="field"><label>Prénom *</label><input type="text" id="prenom" /></div>
+            <div class="field"><label>Nom *</label><input type="text" id="nom" /></div>
+          </div>
+          <div class="field"><label>Email *</label><input type="email" id="email" placeholder="toi@email.com" /><div class="hint">Ta confirmation et ton/tes nouveau(x) code(s) de participation y seront envoyés.</div></div>
+          <div class="field"><label>Téléphone</label><input type="tel" id="telephone" /></div>
+        </div>
+
+        <div class="card">
+          <h3>Récapitulatif</h3>
+          <div class="summary-line"><span id="rl-articles">Casquette(s)</span><span id="v-articles">15,00 €</span></div>
+          <div class="summary-line"><span>Frais d'envoi</span><span id="v-frais">0,00 €</span></div>
+          <div class="summary-total"><span>Total</span><b id="v-total">15,00 €</b></div>
+          <label class="check" style="margin-top:14px"><input type="checkbox" id="cgv" /> <span>J'accepte le <a href="reglement.html" target="_blank">règlement du jeu</a> et je certifie être majeur(e).</span></label>
+          <button class="btn btn-primary btn-block" id="pay-btn" style="margin-top:8px">Payer et doubler mes chances 🍀</button>
+          <div class="secure">🔒 Paiement sécurisé via Mollie (CB, Bancontact…). <span id="demo-note" class="hidden">Mode démo actif.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap"><div class="legal-note">Keep Cool Narbonne — SARL LIMA, 44 rue Demoge, 11100 Narbonne · SIRET 520 349 275 00021. Opération sans lien avec Rockstar Games, Take-Two ou Sony. Marques de leurs titulaires respectifs.</div></div></footer>
+
+<script>
+(function () {
+  var PRIX_CASQ = 1500, FRAIS = 350, DEMO = false;
+  var $ = function (id) { return document.getElementById(id); };
+  function euro(c) { return (c / 100).toFixed(2).replace('.', ',') + ' €'; }
+  function qte() { return Math.max(1, Math.min(20, parseInt($('q-casquette').value, 10) || 1)); }
+  function mode() { var r = document.querySelector('input[name="livr"]:checked'); return r ? r.value : 'retrait'; }
+
+  fetch('/api/config').then(function (r) { return r.json(); }).then(function (c) {
+    if (c.prixCasquetteCents) PRIX_CASQ = c.prixCasquetteCents;
+    if (c.fraisEnvoiCents != null) FRAIS = c.fraisEnvoiCents;
+    DEMO = !!c.paiementDemo;
+    if (DEMO) $('demo-note').classList.remove('hidden');
+    $('price-tag').textContent = euro(PRIX_CASQ);
+    $('frais-label').textContent = '+' + euro(FRAIS);
+    render();
+  }).catch(function () { render(); });
+
+  function render() {
+    var n = qte();
+    var art = n * PRIX_CASQ;
+    var frais = mode() === 'domicile' ? FRAIS : 0;
+    $('q-casquette').value = n;
+    $('rl-articles').textContent = 'Casquette(s) × ' + n;
+    $('v-articles').textContent = euro(art);
+    $('v-frais').textContent = euro(frais);
+    $('v-total').textContent = euro(art + frais);
+    $('addr-block').classList.toggle('hidden', mode() !== 'domicile');
+    $('rc-retrait').classList.toggle('sel', mode() === 'retrait');
+    $('rc-domicile').classList.toggle('sel', mode() === 'domicile');
+  }
+
+  $('casq-minus').onclick = function () { $('q-casquette').value = Math.max(1, qte() - 1); render(); };
+  $('casq-plus').onclick = function () { $('q-casquette').value = Math.min(20, qte() + 1); render(); };
+  $('q-casquette').addEventListener('input', render);
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="livr"]'), function (el) { el.addEventListener('change', render); });
+
+  function alertMsg(msg) { var a = $('alert'); a.textContent = msg; a.className = 'alert show'; a.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+
+  $('pay-btn').onclick = function () {
+    var body = {
+      prenom: $('prenom').value.trim(),
+      nom: $('nom').value.trim(),
+      email: $('email').value.trim(),
+      telephone: $('telephone').value.trim(),
+      casquettes: qte(),
+      livraison_mode: mode(),
+      adresse: $('adresse').value.trim(),
+      code_postal: $('cp').value.trim(),
+      ville: $('ville').value.trim()
+    };
+    if (!body.prenom || !body.nom) return alertMsg('Prénom et nom obligatoires.');
+    if (!/^[^ @]+@[^ @]+\.[^ @]+$/.test(body.email)) return alertMsg('Merci de saisir un email valide.');
+    if (!$('cgv').checked) return alertMsg('Merci d’accepter le règlement du jeu.');
+    var btn = $('pay-btn'); btn.disabled = true; btn.textContent = 'Redirection vers le paiement…';
+    fetch('/api/casquette', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.ok && d.checkoutUrl) { window.location.href = d.checkoutUrl; }
+        else { alertMsg(d.error || 'Une erreur est survenue. Réessaie dans un instant.'); btn.disabled = false; btn.textContent = 'Payer et doubler mes chances 🍀'; }
+      })
+      .catch(function () { alertMsg('Connexion au paiement impossible. Réessaie dans un instant.'); btn.disabled = false; btn.textContent = 'Payer et doubler mes chances 🍀'; });
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>
