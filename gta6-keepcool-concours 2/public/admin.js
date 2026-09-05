@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault(); sessionStorage.removeItem('admin_token'); location.reload();
   });
 
-  $('add-btn').addEventListener('click', async () => {
+  if ($('add-btn')) $('add-btn').addEventListener('click', async () => {
     const body = {
       code: $('a-code').value.trim().toUpperCase(),
       prenom: $('a-prenom').value.trim(),
