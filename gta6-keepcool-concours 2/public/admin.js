@@ -38,10 +38,9 @@ async function refresh() {
   const ligne = (stats.parSource.find((s) => s.source === 'en_ligne') || {}).n || 0;
   const salle = (stats.parSource.find((s) => s.source === 'en_salle') || {}).n || 0;
   const dispo = (stats.codes.find((c) => c.statut === 'disponible') || {}).n || 0;
-  $('s-ligne').textContent = ligne;
-  $('s-salle').textContent = salle;
   $('s-codes').textContent = dispo;
   SALLE_COUNT = salle;
+  // s-ligne / s-salle sont renseignes dans renderKPIs (split des VENTES par canal).
 
   const tl = $('tirages-list');
   if (stats.tirages && stats.tirages.length) {
@@ -143,6 +142,8 @@ function renderKPIs() {
   $('k-tshirts').textContent = tTotal;
   $('k-casq').textContent = casq;
   $('k-attente').textContent = attente;
+  if ($('s-ligne')) $('s-ligne').textContent = tOnline;
+  if ($('s-salle')) $('s-salle').textContent = tSalle;
 
   const target = Math.max(1, parseInt($('pm-target').value, 10) || 166);
   const pct = Math.min(100, Math.round((tTotal / target) * 1000) / 10);
