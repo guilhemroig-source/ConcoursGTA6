@@ -122,18 +122,22 @@ function renderVisitLists(pages, refs) {
 // Calcule le chiffre d'affaires, les ventes et la progression vers le point mort.
 function renderKPIs() {
   const paid = CMDS.filter((c) => c.statut === 'payee');
-  let ca = 0, tOnline = 0, casq = 0;
+  let ca = 0, tOnline = 0, tSalle = 0, casq = 0;
   paid.forEach((c) => {
     ca += c.montant_total || 0;
+    // Vente saisie a l'accueil = commande payee SANS paiement Mollie (rentree manuellement).
+    // Commande boutique = paiement Mollie present => vente en ligne.
+    const enSalle = !c.mollie_payment_id;
     try {
       JSON.parse(c.items_json || '[]').forEach((it) => {
         if (it.type === 'casquette') casq += (it.qte || 0);
+        else if (enSalle) tSalle += (it.qte || 0);
         else tOnline += (it.qte || 0);
       });
     } catch (e) {}
   });
   const attente = CMDS.filter((c) => c.statut === 'en_attente').length;
-  const tTotal = tOnline + SALLE_COUNT; // en ligne + participations en salle
+  const tTotal = tOnline + tSalle; // en ligne (boutique) + en salle (accueil)
 
   $('k-ca').textContent = eurC(ca);
   $('k-tshirts').textContent = tTotal;
@@ -149,7 +153,7 @@ function renderKPIs() {
   if (tTotal >= target) {
     $('pm-label').innerHTML = '🎉 <b style="color:#22e0e0">Point mort atteint !</b> ' + tTotal + ' t-shirts vendus. Chaque vente supplémentaire est désormais du bénéfice.';
   } else {
-    $('pm-label').innerHTML = '<b>' + tTotal + '</b> / ' + target + ' t-shirts &nbsp;·&nbsp; encore <b style="color:#ff2e88">' + reste + '</b> pour rentabiliser (dont ' + tOnline + ' en ligne + ' + SALLE_COUNT + ' en salle).';
+    $('pm-label').innerHTML = '<b>' + tTotal + '</b> / ' + target + ' t-shirts &nbsp;·&nbsp; encore <b style="color:#ff2e88">' + reste + '</b> pour rentabiliser (dont ' + tOnline + ' en ligne + ' + tSalle + ' en salle).';
   }
 }
 
@@ -176,7 +180,7 @@ function renderCommandes(list) {
   if (!list.length) { el.innerHTML = '<tr><td colspan="7" class="hint">Aucune commande.</td></tr>'; return; }
   const sst = 'padding:6px 8px;border-radius:8px;border:1px solid var(--card-border);background:rgba(0,0,0,.35);color:var(--text);font-size:.82rem';
   el.innerHTML = list.map((c) => `<tr>
-    <td style="font-family:monospace">${escapeHtml(c.numero)}</td>
+    <td style="font-family:monospace">${escapeHtml(c.numero)}<br><span style="font-size:.68rem;font-weight:700;letter-spacing:.03em;color:${c.mollie_payment_id ? 'var(--cyan)' : 'var(--orange)'}">${c.mollie_payment_id ? '🌐 Boutique' : '🏠 Accueil'}</span></td>
     <td>${escapeHtml(c.prenom)} ${escapeHtml(c.nom)}<br><span class="hint" style="font-size:.78rem">${escapeHtml(c.email || '')}</span></td>
     <td>${fmtItems(c.items_json)}</td>
     <td>${eur(c.montant_total)}</td>
