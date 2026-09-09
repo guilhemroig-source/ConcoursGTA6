@@ -4,6 +4,19 @@ let CFG = { prixTshirtCents: 2500, prixCasquetteCents: 1500, fraisEnvoiCents: 35
 const $ = (id) => document.getElementById(id);
 const eur = (c) => (c / 100).toFixed(2).replace('.', ',') + ' €';
 
+// Reference d'affiliation / campagne (ex. lien influenceur ?ref=modzii).
+// Capturee a l'arrivee et memorisee pour etre transmise avec la commande.
+function getRef() {
+  try {
+    let u = new URLSearchParams(location.search).get('ref');
+    if (u) {
+      u = u.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 32);
+      if (u) { try { localStorage.setItem('kc_ref', u); } catch (e) {} return u; }
+    }
+    return localStorage.getItem('kc_ref') || '';
+  } catch (e) { return ''; }
+}
+
 async function loadCfg() {
   try {
     const c = await (await fetch('/api/config')).json();
@@ -102,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
       adresse: $('adresse').value.trim(),
       code_postal: $('cp').value.trim(),
       ville: $('ville').value.trim(),
+      ref: getRef(),
     };
 
     $('pay-btn').disabled = true; $('pay-btn').textContent = 'Redirection vers le paiement…';
