@@ -1,0 +1,43 @@
+<title>T-shirt 360&#176;</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&display=swap">
+<style>
+  :root{--ink:#eef0ff;--muted:#b9bccb;--cyan:#22e0e0;--magenta:#ff2e88;}
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0;overflow:hidden;font-family:'Figtree',system-ui,Segoe UI,Roboto,sans-serif;color:var(--ink);
+    background:radial-gradient(1200px 700px at 15% -10%, rgba(34,224,224,.14), transparent 60%),
+      radial-gradient(1200px 700px at 100% 0%, rgba(255,46,136,.18), transparent 55%),
+      radial-gradient(900px 900px at 50% 122%, rgba(155,123,255,.12), transparent 60%), #07070e;}
+  .stage{position:fixed;inset:0;display:grid;place-items:center;padding:8px}
+  video{max-height:96vh;max-width:100%;height:auto;width:auto;border-radius:16px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05);background:#000;display:block}
+  .badge{position:fixed;top:20px;left:22px;width:62px;height:62px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.7);display:grid;place-items:center;font-weight:700;font-size:1rem;
+    color:#fff;background:rgba(0,0,0,.28);backdrop-filter:blur(4px);z-index:4}
+  .badge svg{position:absolute;inset:-2px;width:66px;height:66px;animation:spin 6s linear infinite;opacity:.9}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .brand{position:fixed;top:22px;right:24px;text-align:right;z-index:4;pointer-events:none}
+  .brand .t1{font-weight:700;letter-spacing:.24em;font-size:.78rem;color:#e7e9f2}
+  .brand .t2{letter-spacing:.26em;font-size:.58rem;color:#9aa0c2;margin-top:3px}
+  .retour{position:fixed;left:22px;bottom:22px;z-index:5;color:#c9ccd8;text-decoration:none;font-size:.8rem;
+    letter-spacing:.02em;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.16);border-radius:999px;
+    padding:8px 15px;backdrop-filter:blur(6px)}
+  .retour:hover{background:rgba(255,255,255,.12)}
+  .cap{position:fixed;left:0;right:0;bottom:22px;text-align:center;z-index:3;pointer-events:none;
+    font-size:.68rem;letter-spacing:.32em;text-transform:uppercase;color:#c9ccd8}
+  @media(max-width:640px){.brand{display:none}.cap{font-size:.58rem;letter-spacing:.16em;bottom:16px}}
+</style>
+<div class="stage">
+  <video src="collector-360.mp4" autoplay loop muted playsinline controls preload="auto"></video>
+</div>
+<div class="badge">360&#176;<svg viewBox="0 0 70 70"><path d="M35 8 a27 27 0 1 1 -19 8" fill="none" stroke="#22e0e0" stroke-width="2.4" stroke-linecap="round"/><path d="M15 12 l2 8 l8 -3 z" fill="#ff2e88"/></svg></div>
+<div class="brand"><div class="t1">SOCIAL SPORTS CLUB</div><div class="t2">T-SHIRT &#183; 360&#176; PRESENTATION</div></div>
+<a class="retour" href="index.html">&#8592; Retour au concours</a>
+<div class="cap">Keep Cool&nbsp;&nbsp;|&nbsp;&nbsp;Social Sports Club&nbsp;&nbsp;|&nbsp;&nbsp;360&#176; View</div>
+<script>
+  var v=document.querySelector('video');
+  // ensure autoplay across browsers; if blocked, start on first tap
+  function tryPlay(){var p=v.play();if(p&&p.catch)p.catch(function(){});}
+  v.addEventListener('canplay',tryPlay);
+  document.addEventListener('click',tryPlay,{once:true});
+</script>
