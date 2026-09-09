@@ -92,6 +92,12 @@ if (!cmdCols.includes('relance_envoyee')) {
   db.exec("ALTER TABLE commandes ADD COLUMN relance_envoyee INTEGER NOT NULL DEFAULT 0");
 }
 
+// Migration douce : reference d'affiliation / source de trafic (ex. "modzii").
+// Permet de tracer les ventes issues d'un influenceur ou d'une campagne.
+if (!cmdCols.includes('ref')) {
+  db.exec("ALTER TABLE commandes ADD COLUMN ref TEXT");
+}
+
 // Statistiques de visite (comptage anonyme, RGPD-friendly : pas d'IP en clair,
 // on stocke un identifiant hache par visiteur/jour).
 db.exec(`
