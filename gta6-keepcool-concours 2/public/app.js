@@ -1,5 +1,17 @@
 'use strict';
 
+// Capture une reference d'affiliation / campagne (ex. ?ref=modzii) des l'arrivee
+// et la memorise, pour qu'elle suive le visiteur jusqu'a la boutique.
+(function captureRef() {
+  try {
+    let u = new URLSearchParams(location.search).get('ref');
+    if (u) {
+      u = u.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 32);
+      if (u) localStorage.setItem('kc_ref', u);
+    }
+  } catch (e) {}
+})();
+
 // Charge la config publique et remplit la page
 async function loadConfig() {
   try {
