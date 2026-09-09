@@ -22,7 +22,7 @@ function newCode() {
 }
 
 const stmt = {
-  insert: db.prepare("INSERT INTO commandes (numero, prenom, nom, email, telephone, livraison_mode, adresse, code_postal, ville, items_json, quantite, montant_articles, frais_envoi, montant_total, statut, mollie_payment_id) VALUES (@numero,@prenom,@nom,@email,@telephone,@livraison_mode,@adresse,@code_postal,@ville,@items_json,@quantite,@montant_articles,@frais_envoi,@montant_total,'en_attente',NULL)"),
+  insert: db.prepare("INSERT INTO commandes (numero, prenom, nom, email, telephone, livraison_mode, adresse, code_postal, ville, items_json, quantite, montant_articles, frais_envoi, montant_total, statut, mollie_payment_id, ref) VALUES (@numero,@prenom,@nom,@email,@telephone,@livraison_mode,@adresse,@code_postal,@ville,@items_json,@quantite,@montant_articles,@frais_envoi,@montant_total,'en_attente',NULL,@ref)"),
   setNumero: db.prepare('UPDATE commandes SET numero = ? WHERE id = ?'),
   setPayment: db.prepare('UPDATE commandes SET mollie_payment_id = ? WHERE id = ?'),
   byNumero: db.prepare('SELECT * FROM commandes WHERE numero = ?'),
@@ -32,7 +32,7 @@ const stmt = {
   markFailed: db.prepare("UPDATE commandes SET statut=? WHERE id=?"),
   markEmail: db.prepare('UPDATE commandes SET email_envoye=1 WHERE id=?'),
   insertCode: db.prepare("INSERT INTO codes (code, statut, participant_id) VALUES (?, 'utilise', NULL)"),
-  insertParticipant: db.prepare("INSERT INTO participants (code, prenom, nom, email, telephone, source, reglement_ok, rgpd_ok, majeur_ok, ip, commande_id) VALUES (?, ?, ?, ?, ?, 'boutique', 1, 1, 1, 'boutique', ?)"),
+  insertParticipant: db.prepare("INSERT INTO participants (code, prenom, nom, email, telephone, source, reglement_ok, rgpd_ok, majeur_ok, ip, commande_id) VALUES (?, ?, ?, ?, ?, ?, 1, 1, 1, 'boutique', ?)"),
   linkCode: db.prepare('UPDATE codes SET participant_id=? WHERE code=?'),
   listCommandes: db.prepare('SELECT id, numero, prenom, nom, email, telephone, quantite, montant_articles, frais_envoi, montant_total, statut, statut_livraison, mollie_payment_id, livraison_mode, adresse, code_postal, ville, items_json, codes_json, cree_le, paye_le FROM commandes ORDER BY id DESC'),
   setStatuts: db.prepare('UPDATE commandes SET statut = ?, statut_livraison = ? WHERE id = ?'),
@@ -46,6 +46,12 @@ const stmt = {
 
 function centsToValue(cents) {
   return (cents / 100).toFixed(2); // ex 28.50
+}
+
+/** Normalise une reference d'affiliation/source (ex. "modzii"). null si absente. */
+function sanitizeRef(v) {
+  const r = String(v || '').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 32);
+  return r || null;
 }
 
 /** Valide et calcule une commande a partir du payload client. */
@@ -92,6 +98,7 @@ function buildOrder(payload) {
     numero: 'TMP-' + block(8),
     prenom, nom, email, telephone, livraison_mode, adresse, code_postal, ville,
     items_json: JSON.stringify(clean), quantite: totalUnites, montant_articles, frais_envoi, montant_total,
+    ref: sanitizeRef(payload.ref),
   };
 }
 
@@ -136,6 +143,7 @@ function buildCasquetteOrder(payload) {
     numero: 'TMP-' + block(8),
     prenom, nom, email, telephone, livraison_mode, adresse, code_postal, ville,
     items_json: JSON.stringify(clean), quantite: casquettes, montant_articles, frais_envoi, montant_total,
+    ref: sanitizeRef(payload.ref),
   };
 }
 
@@ -152,11 +160,12 @@ const createCasquetteOrder = db.transaction((payload) => {
 const finalizePaid = db.transaction((cmd) => {
   if (cmd.statut === 'payee') return { alreadyDone: true, codes: JSON.parse(cmd.codes_json || '[]') };
   const codes = [];
+  const source = cmd.ref ? cmd.ref : 'boutique';
   for (let i = 0; i < cmd.quantite; i++) {
     let code = newCode();
     while (db.prepare('SELECT 1 FROM codes WHERE code=?').get(code)) code = newCode();
     stmt.insertCode.run(code);
-    const pInfo = stmt.insertParticipant.run(code, cmd.prenom, cmd.nom, cmd.email, cmd.telephone, cmd.id);
+    const pInfo = stmt.insertParticipant.run(code, cmd.prenom, cmd.nom, cmd.email, cmd.telephone, source, cmd.id);
     stmt.linkCode.run(pInfo.lastInsertRowid, code);
     codes.push(code);
   }
