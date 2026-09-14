@@ -145,16 +145,18 @@ function renderKPIs() {
   if ($('s-ligne')) $('s-ligne').textContent = tOnline;
   if ($('s-salle')) $('s-salle').textContent = tSalle;
 
-  const target = Math.max(1, parseInt($('pm-target').value, 10) || 166);
-  const pct = Math.min(100, Math.round((tTotal / target) * 1000) / 10);
+  const MT = 2010, MC = 1277; // marge nette unitaire en centimes (t-shirt 20,10 € / casquette 12,77 €)
+  const marge = tTotal * MT + casq * MC; // marge cumulée dégagée (centimes)
+  const target = Math.max(1, parseInt($('pm-target').value, 10) || 2657) * 100; // montant à couvrir (centimes) : dotations + communication
+  const pct = Math.min(100, Math.round((marge / target) * 1000) / 10);
   const bar = $('pm-bar');
   bar.style.width = pct + '%';
   bar.textContent = pct >= 8 ? pct + ' %' : '';
-  const reste = Math.max(0, target - tTotal);
-  if (tTotal >= target) {
-    $('pm-label').innerHTML = '🎉 <b style="color:#22e0e0">Point mort atteint !</b> ' + tTotal + ' t-shirts vendus. Chaque vente supplémentaire est désormais du bénéfice.';
+  const reste = Math.max(0, target - marge);
+  if (marge >= target) {
+    $('pm-label').innerHTML = '🎉 <b style="color:#22e0e0">Point mort atteint !</b> ' + eurC(marge) + ' de marge dégagée. Chaque vente supplémentaire est désormais du bénéfice.';
   } else {
-    $('pm-label').innerHTML = '<b>' + tTotal + '</b> / ' + target + ' t-shirts &nbsp;·&nbsp; encore <b style="color:#ff2e88">' + reste + '</b> pour rentabiliser (dont ' + tOnline + ' en ligne + ' + tSalle + ' en salle).';
+    $('pm-label').innerHTML = '<b>' + eurC(marge) + '</b> de marge dégagée / ' + eurC(target) + ' à couvrir &nbsp;·&nbsp; encore <b style="color:#ff2e88">' + eurC(reste) + '</b> pour atteindre le point mort (' + tTotal + ' t-shirts + ' + casq + ' casquettes).';
   }
 }
 
