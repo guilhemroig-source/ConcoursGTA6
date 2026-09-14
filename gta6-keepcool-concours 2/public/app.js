@@ -183,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(css);
     var pre = '';
     if (count >= 25) pre += '<span class="u">🔥 Déjà ' + count + ' participants</span> · ';
+    if (count >= 3) pre += '<span class="u">🎯 1 chance sur ' + Math.ceil(count / 3) + '</span> · ';
     if (dl) pre += '<span class="u">⏳ ' + dl + '</span> · ';
     var bar = document.createElement('div');
     bar.id = 'kc-bar';
