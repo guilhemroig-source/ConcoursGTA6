@@ -234,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (count >= 25) parts.push('<span class="u">🔥 Déjà ' + count + ' participants</span>');
     else parts.push('<span class="u">🎯 Sois parmi les premiers à tenter ta chance</span>');
     if (dl) parts.push('<span class="u">⏳ ' + dl + '</span>');
+    if (count >= 3) parts.push('<span class="u">🎯 1 chance sur ' + Math.ceil(count / 3) + '</span>');
     parts.push('1 T-shirt = <b>1 chance</b> de gagner une <b>PS5 + GTA VI</b>');
     var div = document.createElement('div');
     div.id = 'kc-urgency';
