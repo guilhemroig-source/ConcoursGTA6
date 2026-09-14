@@ -60,6 +60,11 @@
       </div>
         <div style="margin-top:12px" class="price-tag" id="price-tag">25,00 €</div>
         <div class="hint">Prix unitaire · coton premium · sérigraphie néon</div>
+        <div style="margin:14px 0 2px;padding:11px 14px;background:linear-gradient(90deg,rgba(255,46,136,.16),rgba(34,224,224,.08));border:1px solid rgba(255,46,136,.4);border-radius:12px;font-size:.86rem;text-align:left">
+          🎟️ <b>Édition limitée à 300 exemplaires</b> — <span style="color:#ff2e88;font-weight:700"><span id="ed-count">…</span> déjà réservés</span>
+          <div style="height:7px;background:rgba(255,255,255,.12);border-radius:99px;margin-top:9px;overflow:hidden"><div id="ed-fill" style="width:0%;height:100%;background:linear-gradient(90deg,#22e0e0,#ff2e88);border-radius:99px;transition:width .6s"></div></div>
+          <script>fetch('/api/public/stats').then(function(r){return r.json();}).then(function(s){var c=(s&&s.participants)||0,cap=300;var a=document.getElementById('ed-count');if(a)a.textContent=c;var f=document.getElementById('ed-fill');if(f)f.style.width=Math.min(100,Math.round(c/cap*100))+'%';}).catch(function(){});</script>
+        </div>
       </div>
 
       <!-- Formulaire -->
