@@ -157,6 +157,12 @@
     <!-- Commandes en ligne -->
     <div class="card" style="margin-top:24px">
       <h3 style="margin:0 0 12px">Commandes en ligne (boutique)</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px">
+        <input id="cmd-search" placeholder="Rechercher (nom, email, n°)…" style="flex:1;min-width:170px;padding:9px 14px;border-radius:10px;border:1px solid var(--card-border);background:rgba(0,0,0,.25);color:var(--text)" />
+        <select id="cmd-fliv" style="padding:9px 12px;border-radius:10px;border:1px solid var(--card-border);background:rgba(0,0,0,.25);color:var(--text)"><option value="">Livraison : toutes</option><option value="non">🕓 Pas encore reçu</option><option value="oui">✅ Reçu</option></select>
+        <select id="cmd-fmode" style="padding:9px 12px;border-radius:10px;border:1px solid var(--card-border);background:rgba(0,0,0,.25);color:var(--text)"><option value="">Mode : tous</option><option value="retrait">🏠 Retrait salle</option><option value="domicile">📦 Domicile</option></select>
+        <span id="cmd-count" class="hint" style="font-size:.8rem"></span>
+      </div>
       <div id="cmd-alert" class="alert"></div>
       <div style="overflow:auto">
         <table>
@@ -171,7 +177,7 @@
     <div class="card" style="margin-top:24px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
         <h3 style="margin:0">Participants</h3>
-        <input type="text" id="search" placeholder="Rechercher (nom, email, code)…" style="padding:9px 14px;border-radius:10px;border:1px solid var(--card-border);background:rgba(0,0,0,.25);color:var(--text)" />
+        <input type="text" id="search" placeholder="Rechercher (nom, email, code)…" style="padding:9px 14px;border-radius:10px;border:1px solid var(--card-border);background:rgba(0,0,0,.25);color:var(--text)" /> <select id="part-canal" style="margin-left:8px;padding:9px 12px;border-radius:10px;border:1px solid var(--card-border);background:rgba(0,0,0,.25);color:var(--text)"><option value="">Canal : tous</option><option value="en_ligne">🌐 En ligne</option><option value="en_salle">🏠 En salle</option></select>
       </div>
       <div style="overflow:auto;margin-top:14px">
         <table>
