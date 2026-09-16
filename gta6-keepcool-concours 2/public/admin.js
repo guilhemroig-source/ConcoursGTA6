@@ -58,7 +58,7 @@ async function refresh() {
   try {
     const cd = await (await api('/api/admin/commandes')).json();
     CMDS = cd.commandes || [];
-    renderCommandes(CMDS);
+    filterCmd();
   } catch (e) { CMDS = []; }
 
   renderKPIs();
@@ -177,6 +177,32 @@ function livOptions(sel) {
     .map(([v, l]) => '<option value="' + v + '"' + (v === sel ? ' selected' : '') + '>' + l + '</option>').join('');
 }
 
+function recuLivr(c){ return c.statut_livraison === 'distribue_club' || c.statut_livraison === 'expediee'; }
+function canalOf(p){ var c = CMDS.find(function(x){ return x.id === p.commande_id; }); return (c && c.mollie_payment_id) ? 'en_ligne' : 'en_salle'; }
+function filterPart(){
+  var q = (($('search') && $('search').value) || '').toLowerCase();
+  var canal = ($('part-canal') && $('part-canal').value) || '';
+  renderRows(ALL.filter(function(p){
+    if (q && (p.code + ' ' + p.prenom + ' ' + p.nom + ' ' + (p.email||'')).toLowerCase().indexOf(q) < 0) return false;
+    if (canal && canalOf(p) !== canal) return false;
+    return true;
+  }));
+}
+function filterCmd(){
+  var q = (($('cmd-search') && $('cmd-search').value) || '').toLowerCase();
+  var liv = ($('cmd-fliv') && $('cmd-fliv').value) || '';
+  var mode = ($('cmd-fmode') && $('cmd-fmode').value) || '';
+  var list = CMDS.filter(function(c){
+    if (q && ((c.numero||'') + ' ' + (c.prenom||'') + ' ' + (c.nom||'') + ' ' + (c.email||'')).toLowerCase().indexOf(q) < 0) return false;
+    if (liv === 'oui' && !recuLivr(c)) return false;
+    if (liv === 'non' && recuLivr(c)) return false;
+    if (mode && (c.livraison_mode||'') !== mode) return false;
+    return true;
+  });
+  renderCommandes(list);
+  if ($('cmd-count')) $('cmd-count').textContent = list.length + ' / ' + CMDS.length + ' commandes affichees';
+}
+
 function renderCommandes(list) {
   const eur = (c) => (c / 100).toFixed(2).replace('.', ',') + ' €';
   const el = document.getElementById('cmd-rows');
@@ -221,7 +247,7 @@ function renderRows(list) {
         <td>${escapeHtml(p.nom)}</td>
         <td>${escapeHtml(p.email || '')}</td>
         <td>${escapeHtml(p.telephone || '')}</td>
-        <td><span class="tag ${p.source}">${p.source === 'en_ligne' ? 'En ligne' : 'En salle'}</span></td>
+        <td><span class="tag ${canalOf(p)}">${canalOf(p) === 'en_ligne' ? 'En ligne' : 'En salle'}</span></td>
         <td>${p.cree_le}</td>
       </tr>`
     )
@@ -323,10 +349,9 @@ document.addEventListener('DOMContentLoaded', () => {
     renderKPIs();
   });
 
-  $('search').addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase();
-    renderRows(ALL.filter((p) => `${p.code} ${p.prenom} ${p.nom} ${p.email}`.toLowerCase().includes(q)));
-  });
+  $('search').addEventListener('input', filterPart);
+  if ($('part-canal')) $('part-canal').addEventListener('input', filterPart);
+  ['cmd-search', 'cmd-fliv', 'cmd-fmode'].forEach(function(id){ var el = $(id); if (el) el.addEventListener('input', filterCmd); });
 
   if (TOKEN) doLogin(TOKEN);
 });
