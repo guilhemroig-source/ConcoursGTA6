@@ -62,6 +62,7 @@ async function refresh() {
   } catch (e) { CMDS = []; }
 
   renderKPIs();
+  renderAffiliates();
   loadVisites();
 }
 
@@ -201,6 +202,30 @@ function filterCmd(){
   });
   renderCommandes(list);
   if ($('cmd-count')) $('cmd-count').textContent = list.length + ' / ' + CMDS.length + ' commandes affichees';
+}
+
+function renderAffiliates(){
+  var el = document.getElementById('aff-rows'); if (!el) return;
+  var caById = {}; CMDS.forEach(function(c){ caById[c.id] = c.montant_total || 0; });
+  var g = {};
+  function ensure(s){ if (!g[s]) g[s] = { chances: 0, cmds: {} }; }
+  ensure('boutique'); ensure('modzii'); ensure('retrocash');
+  ALL.forEach(function(p){ var s = p.source || 'boutique'; ensure(s); g[s].chances++; g[s].cmds[p.commande_id] = true; });
+  var order = ['boutique', 'modzii', 'retrocash'];
+  Object.keys(g).forEach(function(s){ if (order.indexOf(s) < 0) order.push(s); });
+  var labels = { boutique: '🛒 Achat direct', modzii: '🎬 Modzii', retrocash: '🎮 Retro Cash' };
+  var totV = 0, totCh = 0, totCA = 0;
+  var rows = order.map(function(s){
+    var ids = Object.keys(g[s].cmds);
+    var ventes = ids.length;
+    var ca = ids.reduce(function(t, id){ return t + (caById[id] || 0); }, 0);
+    totV += ventes; totCh += g[s].chances; totCA += ca;
+    var lbl = labels[s] || ('🔗 ' + s);
+    var hi = (s !== 'boutique') ? ' style="background:rgba(255,46,136,.06)"' : '';
+    return '<tr' + hi + '><td>' + lbl + '</td><td><b>' + ventes + '</b></td><td>' + g[s].chances + '</td><td>' + eurC(ca) + '</td></tr>';
+  }).join('');
+  rows += '<tr style="border-top:2px solid var(--card-border)"><td><b>Total</b></td><td><b>' + totV + '</b></td><td><b>' + totCh + '</b></td><td><b>' + eurC(totCA) + '</b></td></tr>';
+  el.innerHTML = rows;
 }
 
 function renderCommandes(list) {
